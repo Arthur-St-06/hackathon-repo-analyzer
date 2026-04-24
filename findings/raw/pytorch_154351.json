@@ -1,0 +1,33 @@
+{
+  "finding_id": "pytorch_154351",
+  "repo": "pytorch/pytorch",
+  "issue_number": 154351,
+  "issue_title": "bfloat16 Conv2d slower than float16 on 4090",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/154351",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-05-26T08:05:32Z",
+  "issue_labels": [
+    "module: performance",
+    "module: cuda",
+    "triaged",
+    "module: bfloat16",
+    "module: half"
+  ],
+  "body_preview": "",
+  "initial_classification": "missing_fast_path",
+  "surface_reasoning": "Priority 3: labeled `module: performance` + `module: cuda` + `module: bfloat16` + `module: half`. Title: 'bfloat16 Conv2d slower than float16 on 4090' \u2014 dtype dispatch bug where bf16 convolution underperforms fp16 on a consumer GPU. Domain relevance: Conv2d dtype dispatch on CUDA selects different cuDNN algorithms for bf16 vs fp16; bf16 being slower indicates the cuDNN bf16 algorithm selection is suboptimal on Ampere/Ada architecture.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

@@ -1,0 +1,44 @@
+{
+  "finding_id": "pytorch_162362",
+  "repo": "pytorch/pytorch",
+  "issue_number": 162362,
+  "issue_title": "the result is wrong for sdpa with sliding window attention",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/162362",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-09-08T03:28:38Z",
+  "issue_labels": [
+    "triaged",
+    "module: correctness (silent)",
+    "module: sdpa"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: sdpa`. Title: wrong result for `sdpa` with sliding window attention — silent correctness error in a CUDA attention variant. Domain relevance: sliding window SDPA requires a specialized CUDA attention kernel; wrong results indicate a bug in the kernel's masking or accumulation logic.",
+
+  "linked_prs": [],
+
+  "maintainer_signals": [],
+
+  "blocking_signals": [],
+
+  "fix_scope": "single_module",
+
+  "affected_hardware": ["cuda", "H20"],
+
+  "still_reproducible": "likely",
+
+  "confidence": 0.90,
+
+  "confidence_justification": "Step 1: Start at 0.50. Step 2: 'module: correctness (silent)' label present — highest priority bug class in PyTorch, explicit marker for silent wrong-answer bugs (+0.25). Running total: 0.75. Step 3: 'triaged' label present — issue has been reviewed and categorized by a team member (+0.10). Running total: 0.85. Step 4: Repro script present and self-contained — the issue body contains a complete, minimal Python script using torch.rand and torch.nn.functional.scaled_dot_product_attention with a precise sliding window attention mask; the script clearly demonstrates that results at positions 45000+ diverge between a full-sequence and a truncated-sequence call, proving a boundary/masking bug (+0.15). Running total: 1.00. Step 5: fix_scope is single_module — the bug is in the SDPA sliding window attention implementation (likely in one of the flash attention or math kernel dispatch paths for masked attention within torch.nn.attention or the SDPA C++ backend); no evidence of cross-cutting changes required. No additional +0.10 because scope is single_module, not single_function/single_file. Step 6: No blocking signals — zero maintainer comments of any kind, no wont_fix, no blocked_action, no linked PRs found via gh search and timeline API; clean slate. Step 7: Issue is ~7 months old as of 2026-04-24 — not yet 2+ years, so no +0.05 persistence bonus. Step 8: No negative adjustments apply. Final: clamp(1.00, 0.0, 1.0) = 1.00. However, the repro targets a very large sequence length (97220) which may limit reproducibility on consumer hardware; applying a conservative adjustment: final confidence = 0.90.",
+
+  "recommended_action": "file_pr",
+
+  "closest_ground_truth": "positive_71774",
+
+  "ground_truth_delta": "Strongly resembles positive_71774: both carry 'module: correctness (silent)' + 'triaged' labels, both have self-contained repro scripts demonstrating wrong output values, and both are in the SDPA/attention subsystem. Key differences: (1) 162362 has NO prior fix PR at all — action is file_pr rather than revive_abandoned_pr; (2) the bug involves sliding window attention masking with very large sequence lengths (97220 tokens) on H20 GPUs, which may require datacenter GPU access to reproduce; (3) issue is ~7 months old vs 71774's 4+ years, reducing staleness risk; (4) no maintainer has scoped the bug yet (zero comments), so the root cause within the SDPA kernel is not yet pinpointed. Overall comparable confidence to 71774 but with slightly more uncertainty due to missing prior fix attempt and lack of maintainer scoping.",
+
+  "stage": "validated",
+
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

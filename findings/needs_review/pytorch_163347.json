@@ -1,0 +1,40 @@
+{
+  "finding_id": "pytorch_163347",
+  "repo": "pytorch/pytorch",
+  "issue_number": 163347,
+  "issue_title": "Incorrect bf16 results in Conv",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/163347",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-09-19T15:18:27Z",
+  "issue_labels": [
+    "needs reproduction",
+    "triaged",
+    "module: mkldnn",
+    "module: bfloat16",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: mkldnn` + `module: bfloat16`. Title: incorrect bf16 results in Conv — silent bfloat16 correctness bug in the oneDNN convolution kernel. Domain relevance: bf16 convolution dispatches to the oneDNN (MKLDNN) kernel; incorrect results require knowledge of bf16 precision handling in the MKLDNN convolution backend.",
+  "stage": "needs_review",
+  "linked_prs": [],
+  "maintainer_signals": [
+    {
+      "author": "ZhaoqiongZ",
+      "role": "COLLABORATOR",
+      "signal_type": "needs_more_info",
+      "quote": "not able to reproduce with 2.9.0.dev20250907+cu128"
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_module",
+  "affected_hardware": ["cpu"],
+  "still_reproducible": "unlikely",
+  "confidence": 0.55,
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present → +0.25. Running total: 0.75. Step 2: 'triaged' label present → +0.10. Running total: 0.85. Step 3: Repro script present in issue body (complete Python code block with torch.conv2d demonstrating wrong bf16 result vs float32) → +0.15. Running total: 1.00. Step 4: 'needs reproduction' label → -0.05. Running total: 0.95. Step 5: still_reproducible = 'unlikely' — COLLABORATOR ZhaoqiongZ explicitly stated 'not able to reproduce with 2.9.0.dev20250907+cu128' and CONTRIBUTOR jbschlosser confirmed 'likely it has been fixed since v2.5.1' → -0.10. Running total: 0.85. Step 6: fix_scope = 'single_module' (not single_function or single_file) → no +0.10 bonus. Step 7: Issue open less than 2 years (created 2025-09-19) → no +0.05. Step 8: No linked PRs — while the bug appears to have been silently fixed in nightly, the issue is still OPEN and no PR has been identified. The issue cannot be confirmed as truly resolved without a specific PR reference. Uncertainty about fix status warrants needs_review rather than reject. Final (clamped): 0.55.",
+  "recommended_action": "needs_human_review",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Like positive_71774, this has the 'module: correctness (silent)' label, a clear repro script, and triaged status. Unlike positive_71774, there is no approved-but-unmerged fix PR — instead a COLLABORATOR says they cannot reproduce the bug in a recent nightly, suggesting it may have been silently fixed. This is significantly less actionable because the bug may already be resolved without a linked PR. The 'needs reproduction' label also weakens confidence. A human reviewer should check whether a specific PR silently fixed this.",
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

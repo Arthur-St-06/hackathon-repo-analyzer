@@ -1,0 +1,73 @@
+{
+  "finding_id": "pytorch_177839",
+  "repo": "pytorch/pytorch",
+  "issue_number": 177839,
+  "issue_title": "[inductor] torch.compile on CPU produces incorrect result when applying `logit` on sliced tensor with specific shape",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/177839",
+  "issue_state": "OPEN",
+  "issue_created_at": "2026-03-19T13:03:03Z",
+  "issue_labels": [
+    "high priority",
+    "module: cpu",
+    "triaged",
+    "module: correctness (silent)",
+    "oncall: pt2"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label — PyTorch's explicit marker for silent wrong-answer bugs. labeled `high priority`. Maintainer `high priority` label confirms the bug is important and acknowledged.",
+  "stage": "needs_review",
+
+  "linked_prs": [
+    {
+      "number": 177853,
+      "title": "[cpu] Fix vectorized logit mismatch for large eps",
+      "url": "https://github.com/pytorch/pytorch/pull/177853",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "First fix attempt closed 2026-03-20, superseded by PR #181297 which takes a cleaner approach using nested blendv instead of conditional clamp reordering.",
+      "reviews_summary": "No maintainer APPROVED reviews found. PR was closed quickly after #181297 was opened with an improved approach."
+    },
+    {
+      "number": 181297,
+      "title": "[aten] Fix CPU vectorized logit for eps > 0.5",
+      "url": "https://github.com/pytorch/pytorch/pull/181297",
+      "state": "open",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": null,
+      "reviews_summary": "Active open PR as of 2026-04-24. No COLLABORATOR/MEMBER reviews yet. PR body precisely identifies the root cause (vec::clamp behavior when lo > hi) and proposes a targeted fix using nested blendv to match the scalar kernel behavior."
+    }
+  ],
+
+  "maintainer_signals": [
+    {
+      "author": "williamwen42",
+      "role": "MEMBER",
+      "signal_type": "needs_more_info",
+      "quote": "@bobrenjc93 are you still tackling this?"
+    }
+  ],
+
+  "blocking_signals": [],
+
+  "fix_scope": "single_function",
+
+  "affected_hardware": ["cpu"],
+
+  "still_reproducible": "likely",
+
+  "confidence": 0.70,
+
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present (+0.25). Running total: 0.75. Step 2: 'triaged' label present (+0.10). Running total: 0.85. Step 3: Repro script present with precise triggering conditions (shape1 >= 2, shape2 - cut_value >= 16) and clear pass/fail output (+0.15). Running total: 1.00. Step 4: fix_scope is single_function — the bug is in the vectorized logit kernel, a single template function (+0.10). Running total: 1.10. Step 5: No blocking signals (empty array). No negative adjustments from blocking signals. Step 6: No maintainer approved_fix or requested_merge signal (no +0.20/+0.20). Step 7: MEMBER williamwen42 commented asking about progress — classified as needs_more_info, not a hard negative but signals the PR needs a new owner. No penalty for this. Step 8: Clamp to [0.0, 1.0] → 1.00. However, active PR #181297 has no maintainer reviews yet, introducing uncertainty about whether the fix approach will be accepted. Conservative adjustment to 0.70 to reflect the open PR lacking approval and the slightly uncertain fix approach (CONTRIBUTOR diagnosis points to correct root cause, but no COLLABORATOR has confirmed).",
+
+  "recommended_action": "needs_human_review",
+
+  "closest_ground_truth": "positive_71774",
+
+  "ground_truth_delta": "Like positive_71774, this is a silent correctness bug with a precise repro script, correctness label, and an open fix PR. Unlike positive_71774, no COLLABORATOR has approved the fix — PR #181297 has no reviews yet. The fix is narrower in scope (single vectorized kernel function) which is a positive signal, but the lack of maintainer engagement on the fix PR introduces uncertainty. Also unlike positive_71774, the issue is only ~5 weeks old (not 4+ years) so staleness is not a concern.",
+
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

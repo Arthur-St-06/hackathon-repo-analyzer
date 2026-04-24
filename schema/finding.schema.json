@@ -1,0 +1,405 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pytorch-bug-agents.internal/schemas/finding.schema.json",
+  "title": "Finding",
+  "description": "A research finding produced by the surface agent and progressively enriched by the validator agent. Three distinct layers of fields track how far through the pipeline a finding has travelled.",
+  "type": "object",
+
+  "definitions": {
+
+    "linked_pr": {
+      "title": "LinkedPR",
+      "description": "A GitHub pull request that references or attempts to fix the issue. Populated by the validator agent via `gh pr view`.",
+      "type": "object",
+      "required": ["number", "title", "url", "state", "merged", "merged_at", "abandoned_reason", "reviews_summary"],
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "type": "integer",
+          "description": "GitHub PR number."
+        },
+        "title": {
+          "type": "string",
+          "description": "PR title as returned by the GitHub API."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Full URL of the pull request."
+        },
+        "state": {
+          "type": "string",
+          "enum": ["open", "closed"],
+          "description": "Current GitHub state of the PR. Use 'closed' for both merged and abandoned PRs; 'merged' field distinguishes them."
+        },
+        "merged": {
+          "type": "boolean",
+          "description": "True if the PR was actually merged into the target branch. A closed PR with merged=false is abandoned, not rejected."
+        },
+        "merged_at": {
+          "oneOf": [
+            {"type": "string", "format": "date-time"},
+            {"type": "null"}
+          ],
+          "description": "ISO 8601 timestamp when the PR was merged. Null if not merged."
+        },
+        "abandoned_reason": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "null"}
+          ],
+          "description": "Explanation of why a closed-but-unmerged PR was not merged. Null when merged=true or state='open'. Key distinctions: ghstack artifact, superseded by other PR, author gave up, maintainer rejected."
+        },
+        "reviews_summary": {
+          "type": "string",
+          "description": "Narrative summary of review decisions: who approved, who requested changes, whether a maintainer triggered the merge bot, and the outcome."
+        }
+      }
+    },
+
+    "maintainer_signal": {
+      "title": "MaintainerSignal",
+      "description": "A structured signal extracted from a single maintainer or collaborator comment. Captures who said what kind of thing and the exact words. Populated by the validator agent.",
+      "type": "object",
+      "required": ["author", "role", "signal_type", "quote"],
+      "additionalProperties": false,
+      "properties": {
+        "author": {
+          "type": "string",
+          "description": "GitHub username of the comment author."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["COLLABORATOR", "MEMBER", "OWNER", "CONTRIBUTOR", "NONE"],
+          "description": "GitHub authorAssociation of the commenter at the time of the comment. COLLABORATOR/MEMBER/OWNER are high-trust signals; CONTRIBUTOR and NONE carry less weight."
+        },
+        "signal_type": {
+          "type": "string",
+          "enum": [
+            "approved_fix",
+            "requested_merge",
+            "blocked_action",
+            "wont_fix",
+            "by_design",
+            "needs_more_info",
+            "scoped_bug",
+            "partial_fix"
+          ],
+          "description": "The type of actionability signal this comment conveys. approved_fix: maintainer said fix is correct; requested_merge: maintainer asked bot to merge; blocked_action: maintainer said don't/can't act; wont_fix: explicit won't fix decision; by_design: behavior is intentional; needs_more_info: reproduction or detail required; scoped_bug: comment narrows the affected scope; partial_fix: comment indicates fix addresses only part of the issue."
+        },
+        "quote": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Direct verbatim quote from the comment, truncated to 200 characters. Must be an actual quote, not a paraphrase."
+        }
+      }
+    }
+
+  },
+
+  "properties": {
+
+    "finding_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+_[0-9]+$",
+      "description": "LAYER 1 · SURFACE AGENT. Unique stable identifier for this finding. Format: {repo_short}_{issue_number} where repo_short uses underscores for slashes, e.g. 'pytorch_71774'. Must be stable across pipeline stages."
+    },
+
+    "repo": {
+      "type": "string",
+      "description": "LAYER 1 · SURFACE AGENT. Full repository name in owner/repo format, e.g. 'pytorch/pytorch'. Used to construct API calls in subsequent pipeline stages."
+    },
+
+    "issue_number": {
+      "type": "integer",
+      "description": "LAYER 1 · SURFACE AGENT. GitHub issue number. Combined with repo to uniquely identify the issue."
+    },
+
+    "issue_title": {
+      "type": "string",
+      "description": "LAYER 1 · SURFACE AGENT. Issue title exactly as returned by the GitHub API."
+    },
+
+    "issue_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "LAYER 1 · SURFACE AGENT. Full canonical URL of the GitHub issue."
+    },
+
+    "issue_state": {
+      "type": "string",
+      "enum": ["OPEN", "CLOSED"],
+      "description": "LAYER 1 · SURFACE AGENT. Current GitHub state of the issue. Note: OPEN does not mean unresolved — the issue may have been fixed without being closed."
+    },
+
+    "issue_created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "LAYER 1 · SURFACE AGENT. ISO 8601 timestamp when the issue was created. Used to detect staleness (pre-2023 open issues with no activity are likely stale)."
+    },
+
+    "issue_labels": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "LAYER 1 · SURFACE AGENT. All label names on the issue at time of fetch. Key labels to watch: 'module: correctness (silent)', 'skipped', 'actionable', 'triaged', 'needs reproduction'."
+    },
+
+    "body_preview": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "LAYER 1 · SURFACE AGENT. First 500 characters of the issue body, for quick human scanning and classifier priming. Truncate at a word boundary if possible."
+    },
+
+    "initial_classification": {
+      "type": "string",
+      "enum": [
+        "correctness_silent",
+        "performance_regression",
+        "missing_fast_path",
+        "ci_noise",
+        "maintainer_task",
+        "unknown"
+      ],
+      "description": "LAYER 1 · SURFACE AGENT. Surface agent's initial classification. correctness_silent: returns wrong answer without error; performance_regression: measurably slower than expected or than a prior version; missing_fast_path: correct but lacks an optimized code path; ci_noise: test-disable, flaky-test tracker, or CI housekeeping; maintainer_task: release, refactor, or infra task not suitable for contributors; unknown: does not fit any category."
+    },
+
+    "surface_reasoning": {
+      "type": "string",
+      "description": "LAYER 1 · SURFACE AGENT. 1-2 sentence explanation of why the surface agent flagged this issue and chose its initial_classification. Should name the specific signal (label, title pattern, body content) that triggered the flag."
+    },
+
+    "linked_prs": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {"$ref": "#/definitions/linked_pr"},
+          "description": "Array of linked PRs. Empty array means search was performed and none found."
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 2 · VALIDATOR AGENT. PRs linked to this issue, found via `gh search prs` and `gh issue timeline`. Empty array means none found. Null means validator has not yet investigated. Validator must not change this after population."
+    },
+
+    "maintainer_signals": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {"$ref": "#/definitions/maintainer_signal"},
+          "description": "Array of structured signals from high-trust commenters. Empty array means no relevant signals found."
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 2 · VALIDATOR AGENT. Structured signals extracted from COLLABORATOR, MEMBER, or OWNER comments on the issue and linked PRs. Empty array is valid when no high-trust signals exist. Null means not yet investigated."
+    },
+
+    "blocking_signals": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Each string is one specific reason this finding may not be actionable. Empty array means no blockers found — this is a positive sign."
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 2 · VALIDATOR AGENT. Specific reasons this finding may NOT be actionable by a contributor. Empty array means no blockers found. Null means not yet investigated. Examples: 'Maintainer explicitly said no real way to act on this', 'Issue is a CI test-disable tracker', 'Fix requires integrating external integer BLAS library'."
+    },
+
+    "fix_scope": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "single_function",
+            "single_file",
+            "single_module",
+            "cross_cutting",
+            "requires_external_lib",
+            "unknown"
+          ]
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 2 · VALIDATOR AGENT. Estimated scope of the fix based on maintainer comments and linked PRs. single_function: one function in one file; single_file: changes confined to one file; single_module: changes within one PyTorch module directory; cross_cutting: changes span multiple subsystems; requires_external_lib: fix needs integrating a new dependency; unknown: cannot be determined from available evidence."
+    },
+
+    "affected_hardware": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 2 · VALIDATOR AGENT. Hardware platforms where the issue is observed. Free-form strings, e.g. ['cpu', 'a100', 'sm_89', 'consumer_gpu', 'rocm']. Empty array means hardware-independent or unknown. Null means not yet investigated."
+    },
+
+    "still_reproducible": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["confirmed", "likely", "unknown", "unlikely"]
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 2 · VALIDATOR AGENT. Validator's assessment of whether the issue can still be reproduced. confirmed: validator or recent commenter verified reproduction; likely: repro script exists, code path unchanged; unknown: old issue, no recent activity, code may have changed; unlikely: significant refactors since report, or a partial fix is known to have landed. Null means not yet assessed."
+    },
+
+    "confidence": {
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 3 · VALIDATOR AGENT. Confidence score from 0.0 to 1.0 that this finding represents an actionable bug a contributor could fix and get merged. Must be null when stage is 'raw'. Scores above 0.8 warrant file_pr or revive_abandoned_pr action. Scores below 0.3 warrant reject."
+    },
+
+    "confidence_justification": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ],
+      "description": "LAYER 3 · VALIDATOR AGENT. Explicit step-by-step reasoning for the confidence score. Must cite specific evidence: label signals, maintainer quotes, PR merge status, reproducibility. Format: 'Step 1: ... (+/-). Step 2: ... Net: X.XX.'"
+    },
+
+    "recommended_action": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "file_pr",
+            "file_issue",
+            "revive_abandoned_pr",
+            "needs_human_review",
+            "reject"
+          ]
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 3 · VALIDATOR AGENT. Recommended next action. file_pr: write a new fix PR; file_issue: the finding warrants a new, better-scoped issue; revive_abandoned_pr: an existing approved-but-unmerged PR should be picked up; needs_human_review: validator is uncertain and a human should decide; reject: not actionable (noise, won't-fix, already resolved)."
+    },
+
+    "closest_ground_truth": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "positive_71774",
+            "noise_76962",
+            "ambiguous_72408"
+          ]
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 3 · VALIDATOR AGENT. Which ground truth case this finding most resembles. positive_71774: silent correctness bug with an approved-but-unmerged fix PR; noise_76962: CI housekeeping / test-disable tracker; ambiguous_72408: real issue but maintainers say no current path to a contributor fix."
+    },
+
+    "ground_truth_delta": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ],
+      "description": "LAYER 3 · VALIDATOR AGENT. Concise description of how this finding differs from the closest ground truth case. Highlights the factors that make this finding more or less actionable than the reference."
+    },
+
+    "stage": {
+      "type": "string",
+      "enum": ["raw", "enriched", "validated", "needs_review", "rejected"],
+      "description": "PIPELINE DISCRIMINATOR · BOTH AGENTS. Current stage of this finding in the pipeline. raw: surface agent wrote Layer 1 only; enriched: validator populated Layer 2 and 3; validated: validator is confident in the verdict; needs_review: validator escalates to human; rejected: validator determined not actionable. Only the validator may advance stage past 'raw'."
+    },
+
+    "created_at": {
+      "oneOf": [
+        {"type": "string", "format": "date-time"},
+        {"type": "null"}
+      ],
+      "description": "LAYER 3 · SURFACE AGENT (sets on creation). ISO 8601 timestamp when this finding record was first written. Set once and never changed."
+    },
+
+    "updated_at": {
+      "oneOf": [
+        {"type": "string", "format": "date-time"},
+        {"type": "null"}
+      ],
+      "description": "LAYER 3 · VALIDATOR AGENT (updates on enrichment). ISO 8601 timestamp of the most recent modification to this finding record."
+    }
+
+  },
+
+  "required": [
+    "finding_id",
+    "repo",
+    "issue_number",
+    "issue_title",
+    "issue_url",
+    "issue_state",
+    "issue_created_at",
+    "issue_labels",
+    "body_preview",
+    "initial_classification",
+    "surface_reasoning",
+    "stage"
+  ],
+
+  "allOf": [
+    {
+      "description": "Enrichment rule: when stage is 'enriched' or beyond, all Layer 2 and Layer 3 fields are required and must be non-null.",
+      "if": {
+        "required": ["stage"],
+        "properties": {
+          "stage": {
+            "enum": ["enriched", "validated", "needs_review", "rejected"]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "linked_prs",
+          "maintainer_signals",
+          "blocking_signals",
+          "fix_scope",
+          "affected_hardware",
+          "still_reproducible",
+          "confidence",
+          "confidence_justification",
+          "recommended_action",
+          "closest_ground_truth",
+          "ground_truth_delta",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "linked_prs":              {"type": "array"},
+          "maintainer_signals":      {"type": "array"},
+          "blocking_signals":        {"type": "array"},
+          "fix_scope":               {"type": "string"},
+          "affected_hardware":       {"type": "array"},
+          "still_reproducible":      {"type": "string"},
+          "confidence":              {"type": "number", "minimum": 0.0, "maximum": 1.0},
+          "confidence_justification":{"type": "string"},
+          "recommended_action":      {"type": "string"},
+          "closest_ground_truth":    {"type": "string"},
+          "ground_truth_delta":      {"type": "string"},
+          "created_at":              {"type": "string", "format": "date-time"},
+          "updated_at":              {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    {
+      "description": "Raw-stage rule: when stage is 'raw', confidence must be null if present. Prevents validators from pre-scoring without full investigation.",
+      "if": {
+        "required": ["stage"],
+        "properties": {
+          "stage": {"const": "raw"}
+        }
+      },
+      "then": {
+        "properties": {
+          "confidence": {"type": "null"}
+        }
+      }
+    }
+  ]
+}

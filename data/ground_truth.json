@@ -1,0 +1,73 @@
+[
+  {
+    "role": "positive",
+    "number": 71774,
+    "title": "matmul returns uninitialized memory for int64 tensors with inner dimension of zero",
+    "url": "https://github.com/pytorch/pytorch/issues/71774",
+    "verdict": "Silent correctness bug: torch.matmul produces uninitialized (garbage) memory when multiplying int64 tensors whose inner dimension is zero (e.g., [5,0] x [0,5]). The result is nondeterministic across calls and the issue is triaged, reproducible, and labeled 'module: correctness (silent)' — a category that always warrants a fix.",
+    "key_evidence": [
+      "Output shows memory addresses instead of computed values: 'C: tensor([[ 140142115139344, 15, 8083509854526923635, ...]]) — two identical calls return different garbage values, asserting C==D fails",
+      "Labels include 'module: correctness (silent)' — PyTorch's explicit label for silent wrong-answer bugs",
+      "COLLABORATOR ngimel confirmed: 'Happens with fbgemm only'",
+      "Fix PR #75200 body states 'Fixes #71774'; COLLABORATOR ngimel approved it and wrote '@pytorchbot merge this please'",
+      "PR #75200 closed with merged=false (merge_commit_sha set but merged=false) — ghstack artifact; issue remains open, suggesting fix may be partial or incomplete",
+      "Issue still OPEN as of 2026-04-23 — 4+ years after creation, meaning the root cause is not fully resolved"
+    ],
+    "linked_prs": [
+      {
+        "number": 75200,
+        "state": "closed",
+        "merged": false,
+        "title": "Fix addmm_cpu for int64"
+      }
+    ],
+    "maintainer_signals": [
+      "ngimel (COLLABORATOR): 'Happens with fbgemm only' — narrows the root cause",
+      "ngimel (COLLABORATOR) approved PR #75200 and wrote '@pytorchbot merge this please' — explicit merge request",
+      "lezcano (COLLABORATOR) confirmed to ngimel: 'It is indeed!' (confirming PR #75200 fixes #71774)"
+    ],
+    "validator_lesson": "A bug labeled 'module: correctness (silent)' with a reproducible script and a maintainer-approved (but unmerged) fix PR is the clearest possible POSITIVE signal. Do not be misled by the issue still being OPEN — silent correctness bugs on edge-case inputs (zero-dimension tensors) often linger even after partial fixes. The key markers are: silent wrong answer, triaged, correctness label, approved fix attempt."
+  },
+  {
+    "role": "noise",
+    "number": 76962,
+    "title": "DISABLED test_comprehensive_linalg_ldl_factor_ex_cuda (__main__.TestDecompCUDA)",
+    "url": "https://github.com/pytorch/pytorch/issues/76962",
+    "verdict": "This is a CI test-disable issue, not a user-facing bug. The DISABLED prefix in the title is PyTorch's bot-driven mechanism for skipping failing or flaky tests in CI; the pytorch-bot comment confirms the test was automatically disabled within 15 minutes of issue creation. There is no code bug to fix — the issue exists solely to track that a test is skipped.",
+    "key_evidence": [
+      "Title starts with 'DISABLED' — PyTorch's reserved keyword for test-disable issues processed by pytorch-bot",
+      "pytorch-bot comment: 'From the DISABLED prefix in this issue title, it looks like you are attempting to disable a test in PyTorch CI... Within ~15 minutes, test_comprehensive_linalg_ldl_factor_ex_cuda will be disabled in PyTorch CI'",
+      "Labels: 'skipped' — confirms this is a test-skip tracker, not a bug report",
+      "Issue body references sibling disable issue #76961 — this is a known, repeatable CI housekeeping pattern",
+      "Zero linked PRs found — no code change is expected or needed",
+      "Issue state: OPEN — these test-disable issues are typically left open as long as the test remains disabled"
+    ],
+    "linked_prs": [],
+    "maintainer_signals": [
+      "pytorch-bot (automated): automatically disabled the test within 15 minutes of issue creation — this is the intended behavior, not an incident"
+    ],
+    "validator_lesson": "Any issue whose title begins with 'DISABLED' followed by a test class name is CI housekeeping noise. The pytorch-bot automatically processes these to skip the named test. There is no actionable code fix; the issue exists only to register the disabled state in the bot's tracking system. Validator agents should immediately classify DISABLED-prefixed issues as noise regardless of the module labels."
+  },
+  {
+    "role": "ambiguous",
+    "number": 72408,
+    "title": "Matrix multiplication is 30 times slower for integers than floats on CPU",
+    "url": "https://github.com/pytorch/pytorch/issues/72408",
+    "verdict": "The performance gap is real and reproducible, but two COLLABORATOR comments reveal the complicating factor: one maintainer tried to close it saying 'integer gemm are supposed to be slow at the moment,' and the maintainer who reopened it explicitly wrote 'we have no real way to act on this issue' — meaning it is acknowledged but not actionable without a significant infrastructure investment (e.g., integrating a fast integer BLAS library).",
+    "key_evidence": [
+      "Benchmarks show ~30x CPU slowdown: int matmul 328ms vs float 10.7ms on 1000x1000 tensors",
+      "COLLABORATOR mingfeima closed the issue writing: 'close this for now, integer gemm are supposed to be slow at the moment'",
+      "COLLABORATOR lezcano reopened writing: 'even if we have no real way to act on this issue, it's a real issue, and we would like to fix it in the future if it becomes actionable at some point' — the explicit 'no real way to act' disqualifies this from POSITIVE",
+      "COLLABORATOR mruberry suggested deprecating integer matmul entirely: 'I actually wonder if we should deprecate integer matrix multiplication in PyTorch unless we're sure it will be faster than converting to float'",
+      "COLLABORATOR lezcano noted: 'There's libraries that provide fast integer matmuls, but we don't use them' — fix requires integrating external libraries, not a localized code change",
+      "Issue created 2022-02-07, still OPEN as of 2026-04-23 — 4+ years of no progress confirms it is not actionable"
+    ],
+    "linked_prs": [],
+    "maintainer_signals": [
+      "mingfeima (COLLABORATOR): 'close this for now, integer gemm are supposed to be slow at the moment' — signals by-design behavior",
+      "lezcano (COLLABORATOR): 'even if we have no real way to act on this issue, it's a real issue, and we would like to fix it in the future if it becomes actionable at some point' — explicitly not actionable",
+      "mruberry (COLLABORATOR): 'A workaround may be to convert the tensors to float... I actually wonder if we should deprecate integer matrix multiplication in PyTorch' — no consensus on direction"
+    ],
+    "validator_lesson": "A 'real' performance issue can be AMBIGUOUS when maintainers explicitly state it is not actionable without architectural changes outside the contributor's scope. The tell is the reopen comment: maintainers keeping an issue open 'for the future' while saying 'no real way to act on this' means there is no concrete next step a contributor can take. Validators should check for maintainer comments that simultaneously acknowledge validity and block action."
+  }
+]

@@ -1,0 +1,55 @@
+{
+  "finding_id": "pytorch_134198",
+  "repo": "pytorch/pytorch",
+  "issue_number": 134198,
+  "issue_title": "[Intel CPU] Same CPU operations on Torch 2.3+ many times slower those on Torch 2.1",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/134198",
+  "issue_state": "OPEN",
+  "issue_created_at": "2024-08-22T03:45:36Z",
+  "issue_labels": [
+    "needs reproduction",
+    "module: performance",
+    "module: cpu",
+    "triaged",
+    "module: regression",
+    "module: intel"
+  ],
+  "body_preview": "",
+  "initial_classification": "performance_regression",
+  "surface_reasoning": "Priority 2: carries both `module: regression` + `module: performance` labels — PyTorch's explicit tagging of a confirmed measurable performance regression. Concrete before/after performance signal satisfies P2 requirement.",
+  "linked_prs": [],
+  "maintainer_signals": [
+    {
+      "author": "ZhaoqiongZ",
+      "role": "COLLABORATOR",
+      "signal_type": "needs_more_info",
+      "quote": "I tested with your mini reproducer with torch version 2.1/2.3/2.5 nightly with prebuilt wheels... I found that 2.3 & 2.5 have better performance than 2.1 and could not reproduce your result."
+    },
+    {
+      "author": "jgong5",
+      "role": "COLLABORATOR",
+      "signal_type": "needs_more_info",
+      "quote": "Perhaps you can share the MKL version you are using locally?"
+    },
+    {
+      "author": "jgong5",
+      "role": "COLLABORATOR",
+      "signal_type": "needs_more_info",
+      "quote": "Did you do `pip install mkl-static mkl-include` according to... before installing things from source? Make sure MKL static lib is detected by cmake."
+    }
+  ],
+  "blocking_signals": [
+    "stale_no_activity: issue open since 2024-08-22 (~1.5 years), last maintainer comment 2024-08-28, reporter confirmed using prebuilt wheels resolves the issue — root cause appears to be missing MKL in source build, not a PyTorch code bug"
+  ],
+  "fix_scope": "unknown",
+  "affected_hardware": ["cpu", "intel"],
+  "still_reproducible": "unlikely",
+  "confidence": 0.20,
+  "confidence_justification": "Start: 0.50. Step 1: 'triaged' label present → +0.10. Running total: 0.60. Step 2: Repro script present (self-contained Python timing benchmark) → +0.15. Running total: 0.75. Step 3: 'needs reproduction' label present (COLLABORATOR could not reproduce) → -0.05. Running total: 0.70. Step 4: COLLABORATOR ZhaoqiongZ tested the exact reproducer with prebuilt wheels from pytorch.org and found 2.3 and 2.5 are actually faster than 2.1 — directly contradicting the report. The reporter subsequently confirmed that using prebuilt wheels resolves the issue. This is strong evidence the issue is a build configuration problem (missing MKL static library), not a code regression in PyTorch. No code fix is possible. → -0.40 (effectively maintainer demonstrated no reproducible regression). Running total: 0.30. Step 5: still_reproducible = 'unlikely' because maintainer failed to reproduce and reporter acknowledged binary wheels work → -0.10. Running total: 0.20. Step 6: fix_scope unknown — no code path identified as faulty. Final (clamped): 0.20.",
+  "recommended_action": "reject",
+  "closest_ground_truth": "noise_76962",
+  "ground_truth_delta": "Unlike noise_76962 (a CI test-disable tracker), this is a real user concern — the reporter genuinely experienced slowdowns. However, like noise_76962, it is not actionable as a PyTorch code bug: COLLABORATOR investigation showed the regression is not reproducible with official binary wheels and is attributable to a missing MKL dependency in the reporter's source build. The issue cannot be fixed by a contributor submitting a code PR. The key difference from noise_76962 is that this required investigation to determine non-actionability rather than being immediately obvious from the title.",
+  "stage": "rejected",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

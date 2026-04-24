@@ -1,0 +1,66 @@
+{
+  "finding_id": "pytorch_152595",
+  "repo": "pytorch/pytorch",
+  "issue_number": 152595,
+  "issue_title": "ROCm, 7900 XTX (gfx1100): Pytorch FLASH_ATTENTION SDPA is 2.5x slower than MATH (fp16, head_dim 256, seqlen 4360, 12 heads)",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/152595",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-05-01T13:41:59Z",
+  "issue_labels": [
+    "module: performance",
+    "module: rocm",
+    "triaged",
+    "module: sdpa"
+  ],
+  "body_preview": "",
+  "initial_classification": "performance_regression",
+  "surface_reasoning": "Priority 2: labeled `module: performance` + `module: rocm` + `module: sdpa`. Title: 'ROCm FLASH_ATTENTION SDPA is 2.5x slower than MATH (fp16, head_dim 256, seqlen 4360)' — concrete 2.5x regression where the specialized flash attention kernel underperforms the naive math backend. Domain relevance: ROCm flash attention is a fused HIP kernel; performing worse than the math fallback indicates a kernel configuration or dispatch bug in the ROCm SDPA implementation.",
+
+  "linked_prs": [],
+
+  "maintainer_signals": [
+    {
+      "author": "naromero77amd",
+      "role": "COLLABORATOR",
+      "signal_type": "needs_more_info",
+      "quote": "Could you please post the final updated version of your benchmark? Thanks"
+    },
+    {
+      "author": "xinyazhang",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "The performance depends on the Triton/LLVM optimization on Navi31"
+    },
+    {
+      "author": "naromero77amd",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "No, there is no other branch to try. What @xinyazhang meant is that performance issues are dependent on Triton compiler toolchain"
+    }
+  ],
+
+  "blocking_signals": [
+    "fix_requires_external_lib: Performance of ROCm SDPA flash attention on Navi31 (gfx1100) depends on Triton/LLVM compiler optimization; maintainer xinyazhang confirmed fix requires improvements in the external Triton toolchain, not PyTorch itself"
+  ],
+
+  "fix_scope": "requires_external_lib",
+
+  "affected_hardware": ["rocm", "gfx1100", "7900 XTX"],
+
+  "still_reproducible": "confirmed",
+
+  "confidence": 0.45,
+
+  "confidence_justification": "Step 1: Start at 0.50. Step 2: 'triaged' label present (+0.10). Running total: 0.60. Step 3: Repro script present — fully self-contained benchmark is in the issue body (+0.15). Running total: 0.75. Step 4: fix_requires_external_lib in blocking_signals — COLLABORATOR xinyazhang explicitly stated 'The performance depends on the Triton/LLVM optimization on Navi31' and naromero77amd confirmed 'performance issues are dependent on Triton compiler toolchain'; fix requires improvements in the external Triton/LLVM toolchain, not PyTorch itself (-0.30). Running total: 0.45. Step 5: No 'module: correctness (silent)' label — this is a performance issue only; no +0.25 correctness signal. Step 6: still_reproducible='confirmed' — user confirmed issue still present on ROCm 7 as recently as late 2025 (within 12 months); no reproducibility penalty. Step 7: Issue is ~1 year old as of 2026-04-24 — not yet 2+ years, so no +0.05 persistence bonus. Step 8: fix_scope is requires_external_lib — no +0.10 single_function/single_file bonus. Final: clamp(0.45, 0.0, 1.0) = 0.45.",
+
+  "recommended_action": "needs_human_review",
+
+  "closest_ground_truth": "ambiguous_72408",
+
+  "ground_truth_delta": "Similar to ambiguous_72408 (integer matmul 30x slower): both are real, reproducible performance issues that require external toolchain or library improvements rather than a PyTorch code change. Key differences: (1) 152595 is a ROCm/Triton dependency rather than integer BLAS; (2) no explicit maintainer 'no real way to act' comment was made — the maintainers are actively investigating but scoped the root cause to Triton/LLVM; (3) issue is more recent (~1 year vs 4+ years); (4) maintainers have not explicitly blocked action, only identified that improvement depends on external Triton optimization. Slightly more actionable than 72408 since no explicit blocked_action signal exists, but still unlikely to result in a PyTorch-only fix PR.",
+
+  "stage": "needs_review",
+
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

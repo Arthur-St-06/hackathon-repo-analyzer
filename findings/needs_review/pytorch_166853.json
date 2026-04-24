@@ -1,0 +1,57 @@
+{
+  "finding_id": "pytorch_166853",
+  "repo": "pytorch/pytorch",
+  "issue_number": 166853,
+  "issue_title": "torch.randn on CPU is not accurate with dtype=bfloat16",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/166853",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-11-03T12:41:14Z",
+  "issue_labels": [
+    "triaged",
+    "module: random",
+    "module: bfloat16",
+    "actionable",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label — PyTorch's explicit marker for silent wrong-answer bugs. labeled `actionable`. Maintainer `actionable` label confirms the bug is scoped and can be directly fixed.",
+  "stage": "needs_review",
+
+  "linked_prs": [
+    {
+      "number": 166854,
+      "title": "Change normal_fill_16 to use double in calculation",
+      "url": "https://github.com/pytorch/pytorch/pull/166854",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "PR was opened by the same reporter (constroy) who filed the issue. CONTRIBUTOR malfet requested changes suggesting use of op_math_t primitive instead of switching to double. The contributor updated the PR accordingly, but the PR was subsequently marked stale by github-actions bot and closed. No COLLABORATOR/MEMBER/OWNER review was ever received.",
+      "reviews_summary": "CONTRIBUTOR malfet submitted CHANGES_REQUESTED: 'don't need to go all the way to double, use op_math_t primitive instead'. No COLLABORATOR, MEMBER, or OWNER review on record. PR went stale and was closed."
+    }
+  ],
+
+  "maintainer_signals": [],
+
+  "blocking_signals": [],
+
+  "fix_scope": "single_function",
+
+  "affected_hardware": ["cpu"],
+
+  "still_reproducible": "likely",
+
+  "confidence": 0.65,
+
+  "confidence_justification": "Step 1: 'module: correctness (silent)' label present → +0.25. Running total: 0.75. Step 2: No COLLABORATOR/MEMBER/OWNER maintainer signal (malfet is CONTRIBUTOR only) → no adjustment. Step 3: Repro script present — self-contained Python script demonstrating CPU generates values only in (-3.5, +3.5) while CUDA generates wider range; reporter also identified the specific source file and line (DistributionTemplates.h:139-148) → +0.15. Running total: 0.90. Step 4: 'triaged' label present → +0.10. Running total: 1.00. Step 5: fix_scope is 'single_function' — the fix is changing intermediate precision in normal_fill_16 in one function → +0.10. Running total: 1.10. Step 6: Clamp to 1.0 before negatives. Step 7: PR #166854 was closed without merge and reviewer indicated the approach (using double) was wrong — a better approach (op_math_t) was suggested but never implemented cleanly → no pr_rejected signal (reviewer is CONTRIBUTOR not maintainer, and their feedback was constructive not rejecting). Step 8: However, with no COLLABORATOR engagement whatsoever, and a stale abandoned PR, there is meaningful uncertainty: -0.25 to reflect abandoned PR with direction ambiguity. Running total: 0.75. Step 9: Issue is recent (Nov 2025, < 6 months) so no staleness penalty. Final: 0.65 — applying additional -0.10 to reflect: no maintainer-approved fix direction, no COLLABORATOR/MEMBER/OWNER comment confirming root cause, only CONTRIBUTOR-level guidance on correct approach.",
+
+  "recommended_action": "needs_human_review",
+
+  "closest_ground_truth": "positive_71774",
+
+  "ground_truth_delta": "Similar to positive_71774 in having correctness label, repro script, and actionable label. Key differences: (1) no COLLABORATOR/MEMBER/OWNER maintainer engagement — the only reviewer was a CONTRIBUTOR; (2) the attempted fix PR (#166854) was abandoned without ever receiving a maintainer review; (3) the correct implementation approach (op_math_t) is suggested by a CONTRIBUTOR but not validated by a maintainer. The fix is likely feasible but needs a new PR following the op_math_t approach and a real maintainer review before confidence can reach validated threshold.",
+
+  "stage": "needs_review",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

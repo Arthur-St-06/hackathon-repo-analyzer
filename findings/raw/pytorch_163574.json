@@ -1,0 +1,33 @@
+{
+  "finding_id": "pytorch_163574",
+  "repo": "pytorch/pytorch",
+  "issue_number": 163574,
+  "issue_title": "Bfloat16 large numerical discrepancy on Blackwell",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/163574",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-09-22T22:18:41Z",
+  "issue_labels": [
+    "module: numerical-stability",
+    "module: cuda",
+    "triaged",
+    "module: bfloat16",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: cuda` + `module: bfloat16`. Title: bfloat16 large numerical discrepancy on Blackwell \u2014 hardware-specific bf16 precision bug on a new GPU generation. Domain relevance: Blackwell (GB100/GB200) architecture may have different bf16 rounding behavior; diagnosing requires CUDA kernel expertise and access to Blackwell-specific GPU documentation.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

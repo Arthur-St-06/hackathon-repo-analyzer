@@ -1,0 +1,78 @@
+{
+  "_comment": "Reference example for both the surface agent and validator agent. Every field is populated. This is issue #71774 — the ground truth POSITIVE case.",
+
+  "finding_id": "pytorch_71774",
+  "repo": "pytorch/pytorch",
+  "issue_number": 71774,
+  "issue_title": "matmul returns uninitialized memory for int64 tensors with inner dimension of zero",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/71774",
+  "issue_state": "OPEN",
+  "issue_created_at": "2022-01-25T18:11:30Z",
+  "issue_labels": [
+    "triaged",
+    "module: linear algebra",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "### 🐛 Describe the bug\n\nThis was found in opinfo tests. Observed in {windows CI test} and {internal @mode/opt}. Only seen on `dtype=torch.long`, not with ints.\n\nSimilar bugs are found in:\n* `__rmatmul__`, int64\n* ~`addmm_decomposed`, float16~ (turns out this is actually a jit-only issue)\n* `linalg_multi_dot`, int64\n\nrepro scripts for other ops: https://gist.github.com/davidberard98/52fbd8c7...",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Issue carries the 'module: correctness (silent)' label — PyTorch's explicit marker for bugs that return wrong answers without raising an error. The title names a concrete op (matmul), a specific dtype (int64), and an edge-case shape (zero inner dimension), all signals of an actionable, narrowly-scoped correctness bug.",
+
+  "linked_prs": [
+    {
+      "number": 75200,
+      "title": "Fix addmm_cpu for int64",
+      "url": "https://github.com/pytorch/pytorch/pull/75200",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "PR was part of a ghstack stack. It was approved by COLLABORATOR ngimel and a pytorchbot merge was explicitly requested, but the GitHub API reports merged=false. Likely closed as a ghstack artifact when the stack was processed, with the fix either partially landing or being superseded. The issue remaining OPEN 4+ years later suggests the root cause was not fully resolved.",
+      "reviews_summary": "COLLABORATOR ngimel submitted an APPROVED review on 2022-04-06 and then wrote '@pytorchbot merge this please' on 2022-04-07. COLLABORATOR lezcano confirmed the PR addressed the issue ('It is indeed!'). PR was closed 10 minutes after the merge request with merged=false — consistent with ghstack's branch-cleanup workflow rather than an explicit rejection."
+    }
+  ],
+
+  "maintainer_signals": [
+    {
+      "author": "ngimel",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Happens with fbgemm only"
+    },
+    {
+      "author": "ngimel",
+      "role": "COLLABORATOR",
+      "signal_type": "requested_merge",
+      "quote": "@pytorchbot merge this please"
+    },
+    {
+      "author": "lezcano",
+      "role": "COLLABORATOR",
+      "signal_type": "approved_fix",
+      "quote": "It is indeed! [confirming PR #75200 fixes #71774]"
+    }
+  ],
+
+  "blocking_signals": [
+    "PR #75200 has merged=false despite approval and explicit pytorchbot merge request — whether the fix actually landed via ghstack stack merge is unconfirmed, and the issue has remained OPEN for 4+ years"
+  ],
+
+  "fix_scope": "single_function",
+
+  "affected_hardware": ["cpu"],
+
+  "still_reproducible": "likely",
+
+  "confidence": 0.92,
+
+  "confidence_justification": "Step 1: Issue category — 'module: correctness (silent)' label marks this as a silent wrong-answer bug, the highest-priority bug class in PyTorch. (+0.20). Step 2: Reproducibility — exact repro script provided; two runs of identical matmul calls produce different garbage values proving uninitialized memory reads. (+0.25). Step 3: Triage quality — issue is labeled 'triaged', confirmed by two COLLABORATORs, and scoped to fbgemm backend. (+0.20). Step 4: Existing fix attempt — PR #75200 was written with 'Fixes #71774' in the body, approved by a COLLABORATOR, and a pytorchbot merge was explicitly requested. This is strong signal that a fix is feasible and welcome. (+0.20). Step 5: Fix scope — COLLABORATOR comment 'Happens with fbgemm only' narrows to a single backend; PR diff targets addmm_cpu, a single function. (+0.10). Step 6: Blocker — PR closed without confirmed merge, issue open 4+ years; some uncertainty about whether the fix was partial. (-0.08). Step 7: Age — issue is from 2022; code may have shifted but the fbgemm path for int64 zero-dim matmul is obscure enough to remain unfixed. (-0.05). Net confidence: 0.92.",
+
+  "recommended_action": "revive_abandoned_pr",
+
+  "closest_ground_truth": "positive_71774",
+
+  "ground_truth_delta": "This IS the ground truth positive case, so there is no delta. For future findings classified against this reference: a finding resembling positive_71774 would differ by having a cleaner PR merge record (merged=true), a more recent creation date reducing staleness risk, or the fix explicitly confirmed on a specific hardware backend rather than 'fbgemm only'.",
+
+  "stage": "validated",
+
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

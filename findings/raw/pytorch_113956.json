@@ -1,0 +1,32 @@
+{
+  "finding_id": "pytorch_113956",
+  "repo": "pytorch/pytorch",
+  "issue_number": 113956,
+  "issue_title": "iSTFT gives wrong results for some batched input",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/113956",
+  "issue_state": "OPEN",
+  "issue_created_at": "2023-11-17T16:20:30Z",
+  "issue_labels": [
+    "module: cuda",
+    "triaged",
+    "module: correctness (silent)",
+    "module: fft"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: cuda` + `module: fft`. Title reports iSTFT giving wrong results for some batched inputs \u2014 FFT correctness bug that is silent (no exception raised). Domain relevance: batched CUDA FFT correctness requires knowledge of cuFFT batch dimension handling and the CUDA iSTFT kernel implementation.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

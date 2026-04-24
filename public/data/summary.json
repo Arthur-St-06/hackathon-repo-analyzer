@@ -1,0 +1,16 @@
+{
+  "total_issues_analyzed": 1120,
+  "total_findings": 55,
+  "actionable": 21,
+  "needs_review": 25,
+  "rejected": 9,
+  "abandoned_approved_prs": 12,
+  "by_classification": {
+    "correctness_silent": 32,
+    "performance_regression": 12,
+    "missing_fast_path": 9
+  },
+  "top_finding": "pytorch_71774",
+  "repo": "pytorch/pytorch",
+  "last_updated": "2026-04-24T19:18:53Z"
+}

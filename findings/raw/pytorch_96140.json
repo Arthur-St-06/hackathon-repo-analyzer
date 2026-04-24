@@ -1,0 +1,31 @@
+{
+  "finding_id": "pytorch_96140",
+  "repo": "pytorch/pytorch",
+  "issue_number": 96140,
+  "issue_title": "mkldnn matmul kernel may be slower than openblas kernel for very small tensor shapes",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/96140",
+  "issue_state": "OPEN",
+  "issue_created_at": "2023-03-06T22:24:05Z",
+  "issue_labels": [
+    "module: performance",
+    "triaged",
+    "module: mkldnn"
+  ],
+  "body_preview": "",
+  "initial_classification": "missing_fast_path",
+  "surface_reasoning": "Priority 3: labeled `module: performance` + `module: mkldnn`. Title: 'mkldnn matmul kernel may be slower than openblas kernel for very small tensor shapes' \u2014 dispatch bug where oneDNN (MKLDNN) matmul underperforms a simpler OpenBLAS path for small tensors. Domain relevance: MKLDNN matmul kernel selection should fall back to a faster implementation for small shapes; this requires knowledge of the MKLDNN dispatch heuristics and BLAS performance characteristics.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

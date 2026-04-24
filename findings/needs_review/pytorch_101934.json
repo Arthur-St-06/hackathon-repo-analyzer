@@ -1,0 +1,57 @@
+{
+  "finding_id": "pytorch_101934",
+  "repo": "pytorch/pytorch",
+  "issue_number": 101934,
+  "issue_title": "Parameter gradient is not moved parameter is moved across devices",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/101934",
+  "issue_state": "OPEN",
+  "issue_created_at": "2023-05-20T20:54:38Z",
+  "issue_labels": [
+    "module: docs",
+    "module: nn",
+    "triaged",
+    "actionable",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label — PyTorch's explicit marker for silent wrong-answer bugs. labeled `actionable`. Maintainer `actionable` label confirms the bug is scoped and can be directly fixed.",
+  "stage": "needs_review",
+  "linked_prs": [
+    {
+      "number": 150291,
+      "title": "Add differentiable ops hint message in Module docs",
+      "url": "https://github.com/pytorch/pytorch/pull/150291",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "PR with 'Fixes #101934' in the body was opened by COLLABORATOR zeshengzong (March 2025) as a documentation fix. It received COMMENTED reviews from mikaylagawarecki (CONTRIBUTOR) and albanD (COLLABORATOR) but no approvals. The PR was marked stale in July 2025 and closed in August 2025 without merge, likely due to lack of follow-up.",
+      "reviews_summary": "albanD (COLLABORATOR) and mikaylagawarecki (CONTRIBUTOR) left comments but no formal APPROVED reviews. PR was rebased in July 2025 but then closed without further activity."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "mikaylagawarecki",
+      "role": "CONTRIBUTOR",
+      "signal_type": "by_design",
+      "quote": "I am going to remove high priority since it seems that this behavior is expected. It is likely that this behavior occurs because...the implementation of `tensor.to('cuda')` will swap the `.data` field of the tensor and autograd will be unaware of this."
+    },
+    {
+      "author": "albanD",
+      "role": "COLLABORATOR",
+      "signal_type": "by_design",
+      "quote": "Your understanding is correct @mikaylagawarecki. It would be good to update the Module docs to mention that no differentiable ops should be done during the init."
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_file",
+  "affected_hardware": [],
+  "still_reproducible": "likely",
+  "confidence": 0.60,
+  "confidence_justification": "Start: 0.50. Step 1: module: correctness (silent) label present → +0.25. Running total: 0.75. Step 2: Repro script present (full working Python script demonstrating the bug) → +0.15. Running total: 0.90. Step 3: triaged label present → +0.10. Running total: 1.00. Step 4: actionable label present — but this is not a scoring criterion in the rubric, so no additional delta. Step 5: fix_scope is single_file (documentation fix to nn.Module docs) → +0.10. Running total: 1.10. Step 6: by_design signal from COLLABORATOR albanD ('behavior is expected', 'update the Module docs') — this is classified as by_design rather than wont_fix since albanD explicitly recommended a fix (docs update). By_design alone (without blocked_action or wont_fix) → -0.15. Running total: 0.95. Step 7: Linked PR #150291 was closed without merge (stale/abandoned, no approval) — the docs fix is actionable but the PR lacked a formal approve. Not a hard blocker but reduces actionability. Classify as normal abandoned PR, no pr_rejected signal → -0.10 for the uncertainty. Step 8: Issue open ~3 years → +0.05. Running total: 0.90. Clamp to [0.0, 1.0]: 0.90. However, critical nuance: albanD's signal is by_design which means the underlying behavior is intentional (not a code bug). The correctness label and actionable label remain, but the real actionable item is a documentation fix rather than a code fix. This reduces the actionability for a code PR significantly. The docs PR was abandoned. A contributor could revive it as a docs-only PR. Adjusted final: 0.60 to reflect that this is primarily a documentation issue with an abandoned docs PR — not a code correctness fix.",
+  "recommended_action": "needs_human_review",
+  "closest_ground_truth": "ambiguous_72408",
+  "ground_truth_delta": "Unlike ambiguous_72408 where maintainers say 'no real way to act', here maintainers explicitly said what should be done (update Module docs). The issue is actionable as a documentation PR but the behavior itself is by_design. Unlike positive_71774 which has a silent wrong-answer code bug, this finding's actionable path is documentation-only. The correctness label is present but misleading — the behavior is intentional but undocumented, not a code bug. The abandoned docs PR #150291 could be revived. This places it between ambiguous (not unactionable) and positive (not a code correctness fix).",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T17:00:00Z"
+}

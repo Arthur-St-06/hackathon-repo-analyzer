@@ -1,0 +1,70 @@
+{
+  "finding_id": "pytorch_110858",
+  "repo": "pytorch/pytorch",
+  "issue_number": 110858,
+  "issue_title": "Broadcasting matmul is much slower than corresponding einsum",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/110858",
+  "issue_state": "OPEN",
+  "issue_created_at": "2023-10-09T10:03:41Z",
+  "issue_labels": [
+    "module: performance",
+    "module: cpu",
+    "triaged",
+    "has workaround"
+  ],
+  "body_preview": "",
+  "initial_classification": "missing_fast_path",
+  "surface_reasoning": "Priority 3: labeled `module: performance`. Title states broadcasting matmul is much slower than corresponding einsum — a concrete performance anomaly suggesting kernel dispatch selects a suboptimal path for the broadcast case vs the equivalent einsum route.",
+  "stage": "rejected",
+  "linked_prs": [
+    {
+      "number": 171378,
+      "title": "[linalg] Optimize matmul for asymmetric broadcasting using einsum",
+      "url": "https://github.com/pytorch/pytorch/pull/171378",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "Community-contributed PR filed December 2025 claiming to fix #110858 by dispatching to einsum for asymmetric broadcasting cases. No reviews from maintainers were submitted. The PR was marked stale by automation in March 2026 and closed in April 2026 without any maintainer engagement. The fix approach (dispatching to einsum in `_matmul_impl` and `matmul` decomposition) is technically reasonable but never received maintainer sign-off.",
+      "reviews_summary": "No reviews. Only automated bot comments (drci status, stale warning). No maintainer feedback on the approach. The PR touched both C++ (LinearAlgebra.cpp) and Python (decompositions.py) with a heuristic-based dispatch."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "mingfeima",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "@jiayisunx could you please take a look at this one? bmm has a fallback path when MNK < 400, not sure if this is the root cause."
+    },
+    {
+      "author": "lezcano",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "FWIW, the issue is also present on gpu"
+    },
+    {
+      "author": "lezcano",
+      "role": "COLLABORATOR",
+      "signal_type": "blocked_action",
+      "quote": "This is still the case in eager and fixing it may be tricky. We could expose Batched mv from cublas, but I don't think anyone from core currently has time to implement this."
+    },
+    {
+      "author": "lezcano",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Note that we can do this sort of things easily in `torch.compile`, as we can compare different configurations easily...but on eager you have to do the dispatch statically, so you have to come up with complex heuristics"
+    }
+  ],
+  "blocking_signals": [
+    "maintainer_blocked_action: This is still the case in eager and fixing it may be tricky. We could expose Batched mv from cublas, but I don't think anyone from core currently has time to implement this."
+  ],
+  "fix_scope": "single_module",
+  "affected_hardware": ["cpu", "cuda"],
+  "still_reproducible": "confirmed",
+  "confidence": 0.25,
+  "confidence_justification": "Start: 0.50. Step 1: triaged label present → +0.10. Running total: 0.60. Step 2: Repro script present (clear Python benchmark with timing) → +0.15. Running total: 0.75. Step 3: Issue open 2+ years (Oct 2023 to Apr 2026) → +0.05. Running total: 0.80. Step 4: COLLABORATOR lezcano stated 'fixing it may be tricky' and 'I don't think anyone from core currently has time to implement this' — this qualifies as maintainer_blocked_action. Hard penalty → -0.40. Running total: 0.40. Step 5: No correctness (silent) label → no +0.25. Step 6: fix_scope single_module not single_function/single_file → no +0.10. Step 7: still_reproducible confirmed (NONE user re-confirmed on A100 with 2.7.1 in June 2025) — no negative delta. Step 8: has workaround label reduces urgency but is not a scoring criterion. Final: 0.40. However, the blocked_action is a hard blocker per the rules, forcing recommend_action = reject regardless. Final clamped confidence: 0.25 (adjusted down given the hard blocker and the abandoned no-review PR further indicating the fix path is unclear).",
+  "recommended_action": "reject",
+  "closest_ground_truth": "ambiguous_72408",
+  "ground_truth_delta": "Nearly identical profile to ambiguous_72408: a real, reproducible performance issue where a maintainer (lezcano) explicitly said there is no current way to fix it in eager mode and no core team member has time. The main difference is that a community PR #171378 was filed (unlike 72408 with zero PRs) but it received no maintainer engagement and was auto-closed stale. This is slightly more actionable than 72408 in that the fix approach (dispatching to einsum for asymmetric cases) was outlined in detail by the community, but it is equally blocked by the maintainer's 'tricky in eager' and 'no time' statement.",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T17:00:00Z"
+}

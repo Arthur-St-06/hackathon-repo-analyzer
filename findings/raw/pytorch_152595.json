@@ -1,0 +1,32 @@
+{
+  "finding_id": "pytorch_152595",
+  "repo": "pytorch/pytorch",
+  "issue_number": 152595,
+  "issue_title": "ROCm, 7900 XTX (gfx1100): Pytorch FLASH_ATTENTION SDPA is 2.5x slower than MATH (fp16, head_dim 256, seqlen 4360, 12 heads)",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/152595",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-05-01T13:41:59Z",
+  "issue_labels": [
+    "module: performance",
+    "module: rocm",
+    "triaged",
+    "module: sdpa"
+  ],
+  "body_preview": "",
+  "initial_classification": "performance_regression",
+  "surface_reasoning": "Priority 2: labeled `module: performance` + `module: rocm` + `module: sdpa`. Title: 'ROCm FLASH_ATTENTION SDPA is 2.5x slower than MATH (fp16, head_dim 256, seqlen 4360)' \u2014 concrete 2.5x regression where the specialized flash attention kernel underperforms the naive math backend. Domain relevance: ROCm flash attention is a fused HIP kernel; performing worse than the math fallback indicates a kernel configuration or dispatch bug in the ROCm SDPA implementation.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

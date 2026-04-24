@@ -1,0 +1,107 @@
+{
+  "finding_id": "pytorch_165987",
+  "repo": "pytorch/pytorch",
+  "issue_number": 165987,
+  "issue_title": "`triu_/tril_` ignores memory overlaps which can lead to silent correctness issues",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/165987",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-10-21T12:19:30Z",
+  "issue_labels": [
+    "module: error checking",
+    "triaged",
+    "module: memory format",
+    "actionable",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label \u2014 PyTorch's explicit marker for silent wrong-answer bugs. labeled `actionable`. Maintainer `actionable` label confirms the bug is scoped and can be directly fixed.",
+  "stage": "validated",
+  "linked_prs": [
+    {
+      "number": 165993,
+      "title": "Fix triu_/tril_ overlap handling",
+      "url": "https://github.com/pytorch/pytorch/pull/165993",
+      "state": "open",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "Codex-generated fix; no maintainer reviews as of investigation date. Still open but may be superseded by PR #176782 which has COLLABORATOR guidance behind it.",
+      "reviews_summary": "No maintainer reviews. Codex-generated draft with no COLLABORATOR/MEMBER/OWNER review activity."
+    },
+    {
+      "number": 176782,
+      "title": "Fix silent data corruption in triu_/tril_ for expanded tensors",
+      "url": "https://github.com/pytorch/pytorch/pull/176782",
+      "state": "open",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "Still open and under active review. COLLABORATOR nikitaved provided detailed implementation guidance. Contributor requested formal review from nikitaved and mruberry. No approval yet.",
+      "reviews_summary": "No formal APPROVE yet. COLLABORATOR nikitaved provided substantial design guidance in issue comments and PR review comments, shaping the approach to use at::assert_no_internal_overlap scoped to a single 2D matrix slice rather than the full batched tensor."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "nikitaved",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Note, however, that the check for non-overlapped memory will be a false positive if the input is a dense matrix broadcast to a batch of matrices."
+    },
+    {
+      "author": "nikitaved",
+      "role": "COLLABORATOR",
+      "signal_type": "approved_fix",
+      "quote": "Sounds good. Feel free to open a PR :)"
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_file",
+  "affected_hardware": [
+    "cuda",
+    "cpu"
+  ],
+  "still_reproducible": "likely",
+  "confidence": 0.9,
+  "confidence_justification": "Step 1: 'module: correctness (silent)' label present \u2192 +0.25. Running total: 0.75. Step 2: maintainer signal 'approved_fix' from COLLABORATOR nikitaved ('Sounds good. Feel free to open a PR :)') \u2192 +0.20. Running total: 0.95. Step 3: Repro script present \u2014 minimal 5-line CUDA code block with clear wrong output (all zeros instead of expected upper triangular values) \u2192 +0.15. Running total: 1.10. Step 4: 'triaged' label present \u2192 +0.10. Running total: 1.20. Step 5: fix_scope is 'single_file' \u2014 the fix is adding assert_no_internal_overlap to the triu_/tril_ dispatch in a single file \u2192 +0.10. Running total: 1.30. Step 6: No blocking signals \u2192 no deduction. Step 7: Clamp to [0.0, 1.0]. Final: 1.00. Adjusted down slightly for PR #176782 not yet having formal approval: 0.90.",
+  "recommended_action": "revive_abandoned_pr",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Very similar to positive_71774: silent correctness bug, minimal repro, correctness label, COLLABORATOR engagement. Key difference: the fix PRs (#165993, #176782) are still OPEN rather than closed-without-merge, and COLLABORATOR nikitaved has given explicit implementation guidance and a green light ('Sounds good. Feel free to open a PR'). PR #176782 is closer to merge-ready than #75200 was at its point of investigation. This case is slightly stronger since the fix approach is well-specified by the maintainer.",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T20:12:49Z",
+  "contribution_path": [
+    {
+      "step": 1,
+      "title": "Read the abandoned PR diff",
+      "description": "Study PR #165993 ('Fix triu_/tril_ overlap handling') to understand the approach before writing any code. Note which files changed and the overall diff size.",
+      "link": "https://github.com/pytorch/pytorch/pull/165993",
+      "warning": "What killed this PR: Codex-generated fix; no maintainer reviews as of investigation date. Still open but may be superseded by PR #176782 which has COLLABORATOR guidance behind it."
+    },
+    {
+      "step": 2,
+      "title": "Reproduce the bug on current main",
+      "description": "Clone pytorch/pytorch main and run the minimal repro from issue #165987. Confirm the bug still exists before investing time in the fix.",
+      "link": "https://github.com/pytorch/pytorch/issues/165987",
+      "warning": null
+    },
+    {
+      "step": 3,
+      "title": "Apply the fix on current main",
+      "description": "PR #176782 is the active attempt with detailed implementation guidance from COLLABORATOR nikitaved \u2014 prefer contributing to that open PR rather than opening a new one. The key design concern is avoiding false-positive overlap detection for non-overlapping memory with the same storage. If filing a new PR, address nikitaved's comment about the MemOverlapStatus check.",
+      "link": "https://github.com/pytorch/pytorch/pull/165993",
+      "warning": "PR #165993 is a Codex-generated draft with no maintainer reviews \u2014 do not base work on it."
+    },
+    {
+      "step": 4,
+      "title": "Run tests and add a regression test",
+      "description": "Run `python test/test_torch.py -k 'triu_ or tril_'`. nikitaved specifically asked to add tests covering the false-positive overlap case (non-overlapping storage with the same base pointer). Include both overlapping and non-overlapping test cases.",
+      "link": null,
+      "warning": null
+    },
+    {
+      "step": 5,
+      "title": "Open a new PR",
+      "description": "Submit a PR with 'Fixes #165987' and 'Revives #165993 and #176782' in the body. Tag @nikitaved for review \u2014 they already know the issue and the fix approach.",
+      "link": "https://github.com/pytorch/pytorch/issues/165987",
+      "warning": "PR #176782 is still open. Contribute to it rather than filing a new PR unless it has been abandoned."
+    }
+  ]
+}

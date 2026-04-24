@@ -1,0 +1,96 @@
+{
+  "finding_id": "pytorch_180377",
+  "repo": "pytorch/pytorch",
+  "issue_number": 180377,
+  "issue_title": "[Silent Bug] torch.linalg.qr allows the same tensor for both Q and R in the 'out' argument when the input is square",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/180377",
+  "issue_state": "OPEN",
+  "issue_created_at": "2026-04-14T20:30:43Z",
+  "issue_labels": [
+    "module: error checking",
+    "triaged",
+    "module: linear algebra",
+    "actionable",
+    "module: correctness (silent)",
+    "module: edge cases",
+    "bot-triaged"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label \u2014 PyTorch's explicit marker for silent wrong-answer bugs. labeled `actionable`. Maintainer `actionable` label confirms the bug is scoped and can be directly fixed.",
+  "stage": "validated",
+  "linked_prs": [
+    {
+      "number": 180420,
+      "title": "linalg.qr: reject overlapping or aliased Q and R in out=",
+      "url": "https://github.com/pytorch/pytorch/pull/180420",
+      "state": "open",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": null,
+      "reviews_summary": "Active PR with engagement from two COLLABORATORs: nikitaved and cleonard530. cleonard530 is iterating on the fix based on nikitaved's review feedback \u2014 adjusted the TORCH_CHECK to handle MemOverlapStatus::Partial and Full, with a warning for TooHard. The fix is in TORCH_META_FUNC(linalg_qr) and adds a check at input validation time."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "nikitaved",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "There is a non-overlapping tensors check, which should be added to out arguments of the op"
+    },
+    {
+      "author": "cleonard530",
+      "role": "COLLABORATOR",
+      "signal_type": "approved_fix",
+      "quote": "@nikitaved, I changed the `Torch_Check` back to only check for `not MemOverlapStatus::Partial` and `not MemOverlapStatus::Full`, and added a warning for `MemOverlapStatus::TooHard`."
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_function",
+  "affected_hardware": [],
+  "still_reproducible": "likely",
+  "confidence": 0.9,
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present (+0.25). Running total: 0.75. Step 2: COLLABORATOR nikitaved scoped the bug ('non-overlapping tensors check should be added to out arguments') and COLLABORATOR cleonard530 is actively implementing the fix with nikitaved's review \u2014 approved_fix signal (+0.20). Running total: 0.95. Step 3: Repro script present \u2014 simple, ~10-line demonstration of the silent wrong-answer behavior, including expected error vs actual incorrect output (+0.15). Running total: 1.10. Step 4: 'triaged' label present (+0.10). Running total: 1.20. Step 5: fix_scope is single_function \u2014 the fix adds one TORCH_CHECK to TORCH_META_FUNC(linalg_qr), a single function in the linalg meta dispatch (+0.10). Running total: 1.30. Step 6: 'actionable' label explicitly confirms maintainer assessment. Step 7: No blocking signals (empty array). Step 8: Issue only ~10 days old, no staleness. Clamp to [0.0, 1.0]: 1.00. Adjusted to 0.90 to reflect: the fix is an error check addition (not correcting a computation), and the PR has not yet received a final APPROVED review from nikitaved after cleonard530's latest iteration.",
+  "recommended_action": "contribute_to_active_pr",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Similar to positive_71774: silent correctness bug, triaged, repro script, COLLABORATOR engagement, scoped to single function. Key differences: (1) this is an error-checking bug rather than a computational wrong-answer bug \u2014 the fix adds an aliasing check rather than correcting algorithm logic; (2) two COLLABORATORs are actively engaged on the fix PR, vs positive_71774 where the PR was abandoned after a pytorchbot merge attempt; (3) this issue is only 10 days old vs 4+ years for positive_71774, so staleness is not a concern; (4) the 'actionable' label provides explicit triage confirmation. Overall more actionable than the reference case.",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T20:20:31Z",
+  "contribution_path": [
+    {
+      "step": 1,
+      "title": "Read the abandoned PR diff",
+      "description": "Study PR #180420 ('linalg.qr: reject overlapping or aliased Q and R in out=') to understand the approach before writing any code. Note which files changed and the overall diff size.",
+      "link": "https://github.com/pytorch/pytorch/pull/180420",
+      "warning": null
+    },
+    {
+      "step": 2,
+      "title": "Reproduce the bug on current main",
+      "description": "Clone pytorch/pytorch main and run the minimal repro from issue #180377. Confirm the bug still exists before investing time in the fix.",
+      "link": "https://github.com/pytorch/pytorch/issues/180377",
+      "warning": null
+    },
+    {
+      "step": 3,
+      "title": "Apply the fix on current main",
+      "description": "PR #180420 is actively worked by COLLABORATOR cleonard530 with review guidance from nikitaved. The current discussion is about whether to use `MemOverlapStatus::TooHard` or a stricter check. Contribute to the open PR (review, test, address nikitaved\\'s feedback) rather than filing a new one.",
+      "link": "https://github.com/pytorch/pytorch/pull/180420",
+      "warning": "An active PR with COLLABORATOR engagement already exists \u2014 opening a competing PR without context would delay the existing effort."
+    },
+    {
+      "step": 4,
+      "title": "Run tests and add a regression test",
+      "description": "Run `python test/test_linalg.py -k qr`. Add a test that passes the same tensor for both Q and R output arguments and confirms the error is raised correctly.",
+      "link": null,
+      "warning": null
+    },
+    {
+      "step": 5,
+      "title": "Open a new PR",
+      "description": "Submit a PR with 'Fixes #180377' and 'Revives #180420' in the body. Tag @nikitaved @cleonard530 for review \u2014 they already know the issue and the fix approach.",
+      "link": "https://github.com/pytorch/pytorch/issues/180377",
+      "warning": "PR #180420 is still open and under active review. Prefer contributing to the existing effort."
+    }
+  ]
+}

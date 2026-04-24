@@ -1,0 +1,50 @@
+{
+  "finding_id": "pytorch_160296",
+  "repo": "pytorch/pytorch",
+  "issue_number": 160296,
+  "issue_title": "[inductor][cpu] Performance regression in 2025-08-02 nightly release",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/160296",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-08-11T03:58:56Z",
+  "issue_labels": [
+    "module: performance",
+    "triaged",
+    "module: regression",
+    "oncall: cpu inductor"
+  ],
+  "body_preview": "",
+  "initial_classification": "performance_regression",
+  "surface_reasoning": "Priority 2: carries both `module: regression` + `module: performance` labels — PyTorch's explicit tagging of a confirmed measurable performance regression. Concrete before/after performance signal satisfies P2 requirement.",
+  "stage": "needs_review",
+  "linked_prs": [
+    {
+      "number": 163747,
+      "title": "[Inductor] Check if profiling before using record_function in CompiledFxGraph",
+      "url": "https://github.com/pytorch/pytorch/pull/163747",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "PR #163747 was cited by COLLABORATOR CaoE on 2025-10-13 as having fixed the issue ('This issue should be fixed as #163747 has been merged'), but the GitHub API definitively shows merged=false, state=closed. CaoE's claim appears to be erroneous or refers to an internal landing that did not register on GitHub. The PR addresses record_function profiling overhead in CompiledFxGraph — a related but potentially different performance issue. CONTRIBUTOR zxd1997066 confirmed they would check the fix that week, with no subsequent confirmation comment. The issue remains OPEN.",
+      "reviews_summary": "CONTRIBUTOR mlazos submitted APPROVED review on 2025-09-25. CONTRIBUTOR anijain2305 submitted APPROVED review on 2025-09-25. No merge was executed (no @pytorchbot merge comment found). PR was closed without merging for unknown reasons."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "CaoE",
+      "role": "COLLABORATOR",
+      "signal_type": "approved_fix",
+      "quote": "@zxd1997066 This issue should be fixed as https://github.com/pytorch/pytorch/pull/163747 has been merged."
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_file",
+  "affected_hardware": ["cpu"],
+  "still_reproducible": "unknown",
+  "confidence": 0.55,
+  "confidence_justification": "Start: 0.50. Step 1: 'triaged' label present → +0.10. Running total: 0.60. Step 2: COLLABORATOR CaoE identified PR #163747 as the fix (approved_fix signal) → +0.20. Running total: 0.80. Step 3: However, PR #163747 shows merged=false via API, directly contradicting CaoE's claim. The COLLABORATOR's statement appears factually incorrect, which severely undermines its value. Discount the approved_fix signal by applying a penalty: CaoE's claim contradicted by API evidence reduces reliability → -0.20. Running total: 0.60. Step 4: The bad commit f1fb57d854f952bb82950c0dec021c94646afbb7 was confirmed by CONTRIBUTOR zxd1997066 through bisection — the regression is real with concrete before/after benchmark numbers (8.18x vs 13.87x speedup for pyhpc_equation_of_state). This is specific enough to be actionable. Running total: 0.60. Step 5: No repro script beyond benchmark infrastructure (requires inductor benchmark tooling, not a simple standalone Python script) → partial repro only → +0.05 (instead of +0.15). Running total: 0.65. Step 6: fix_scope is 'single_file' (CompiledFxGraph record_function overhead) based on PR #163747's focus → +0.10. Running total: 0.75. Step 7: still_reproducible='unknown' due to ambiguity about CaoE's claim and lack of post-October confirmation. Apply -0.10 for 'unlikely' direction given COLLABORATOR stated it was fixed (but unconfirmed). Running total: 0.65. Step 8: The issue was filed Aug 2025, still open as of April 2026 — 8+ months. The specific bad commit is known but no confirmed merged fix exists. Apply stale_no_activity consideration but not full penalty since investigation is active. Step 9: -0.05 for partial/unconfirmed resolution ambiguity. Final: 0.60. Rounding to: 0.55 (conservative due to unresolvable ambiguity about whether fix landed internally).",
+  "recommended_action": "needs_human_review",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Resembles positive_71774 in that a specific fix was identified and a COLLABORATOR confirmed it, but differs critically: (1) PR #163747 shows merged=false on GitHub, making the 'already fixed' claim unverifiable. (2) This is a performance regression rather than a silent correctness bug — lower severity class. (3) The bad commit is precisely identified through bisection, which is more actionable than positive_71774's fbgemm-scoped bug. (4) No clean 'approved but unmerged' PR with pytorchbot merge request — CaoE's claim points to a possibly internal fix. A human reviewer should verify whether the regression was fixed through an alternate mechanism or whether PR #163747 needs to be re-opened and properly merged.",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

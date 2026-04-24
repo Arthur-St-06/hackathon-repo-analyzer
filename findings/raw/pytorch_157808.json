@@ -1,0 +1,33 @@
+{
+  "finding_id": "pytorch_157808",
+  "repo": "pytorch/pytorch",
+  "issue_number": 157808,
+  "issue_title": "sparse_csr bfloat16 matrix multiplication backward is 10x slower than float16",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/157808",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-07-08T15:35:59Z",
+  "issue_labels": [
+    "module: performance",
+    "module: sparse",
+    "module: cuda",
+    "triaged",
+    "module: bfloat16"
+  ],
+  "body_preview": "",
+  "initial_classification": "performance_regression",
+  "surface_reasoning": "Priority 2: labeled `module: performance` + `module: cuda` + `module: sparse` + `module: bfloat16`. Title: 'sparse_csr bfloat16 matrix multiplication backward is 10x slower than float16' \u2014 concrete 10x dtype performance disparity in CUDA sparse matmul backward. Domain relevance: sparse CSR matmul backward on CUDA dispatches to cuSPARSE; the bf16 vs fp16 gap indicates a missing optimized cuSPARSE kernel or wrong dtype dispatch path.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

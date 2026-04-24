@@ -1,0 +1,31 @@
+{
+  "finding_id": "pytorch_121641",
+  "repo": "pytorch/pytorch",
+  "issue_number": 121641,
+  "issue_title": "torch.isin on GPU vs numpy isin: perf way slower than expected ",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/121641",
+  "issue_state": "OPEN",
+  "issue_created_at": "2024-03-11T17:08:08Z",
+  "issue_labels": [
+    "module: performance",
+    "module: cuda",
+    "triaged"
+  ],
+  "body_preview": "",
+  "initial_classification": "missing_fast_path",
+  "surface_reasoning": "Priority 3: labeled `module: performance`. Title states `torch.isin` on GPU is way slower than numpy isin — unexpected performance gap versus CPU/numpy equivalent strongly suggests dispatch selects a suboptimal GPU kernel for this op.",
+  "linked_prs": [],
+  "maintainer_signals": [],
+  "blocking_signals": [],
+  "fix_scope": "single_function",
+  "affected_hardware": ["cuda", "H100"],
+  "still_reproducible": "likely",
+  "confidence": 0.70,
+  "confidence_justification": "Start: 0.50. Step 1: 'triaged' label present → +0.10. Running total: 0.60. Step 2: Partial repro signal — issue body contains measured benchmark numbers (25-43x slower than numpy) and an inline code snippet showing the isin builtin implementation, but the full executable repro is in an external gist, not self-contained in the issue body. Apply partial repro adjustment → +0.05. Running total: 0.65. Step 3: fix_scope is single_function (the torch.isin GPU kernel dispatch path, identified at aten/src/ATen/native/cuda/TensorCompare.cpp) → +0.10. Running total: 0.75. Step 4: No maintainer comments at all — zero COLLABORATOR/MEMBER/OWNER engagement. The only comment is from a NONE-association user confirming they observe the same slowness. Absence of maintainer engagement on a 2-year-old issue reduces confidence. No formal penalty in rubric but this is a missing positive signal. Step 5: No 'module: correctness (silent)' label — performance issue only, no +0.25 correctness bonus. Step 6: Issue ~2 years old but no confirmed maintainer activity, so open-2-years bonus +0.05 does not clearly apply (the staleness suggests no one intends to fix it soon) — apply a conservative -0.05 for lack of maintainer engagement beyond the triage label. Running total: 0.70. Final (clamped): 0.70.",
+  "recommended_action": "needs_human_review",
+  "closest_ground_truth": "ambiguous_72408",
+  "ground_truth_delta": "Unlike ambiguous_72408, there is no maintainer_blocked_action signal here — no one has said the fix is infeasible or requires external libraries. The issue has a concrete performance gap (25-43x slower than NumPy) with benchmark numbers and a triaged label. It is more actionable than 72408 because no blocking signals exist. Less actionable than positive_71774 because it is a performance/missing-fast-path issue (not silent correctness), has zero maintainer engagement beyond the triage label, and has no attempted fix PR. The lack of maintainer comments is the key differentiator — it is unclear whether this is considered low priority or simply overlooked.",
+  "stage": "needs_review",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

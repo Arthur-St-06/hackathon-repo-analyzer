@@ -1,0 +1,52 @@
+{
+  "finding_id": "pytorch_164563",
+  "repo": "pytorch/pytorch",
+  "issue_number": 164563,
+  "issue_title": "[Blackwell][Inductor] Numerical mismatches in test_max_autotune.py::TestMaxAutotune::test_non_contiguous_input_mm_plus_mm",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/164563",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-10-03T09:40:54Z",
+  "issue_labels": [
+    "module: cuda",
+    "triaged",
+    "module: correctness (silent)",
+    "oncall: pt2",
+    "module: inductor"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: cuda` + `module: inductor`. Title: Blackwell Inductor numerical mismatches in `mm` autotune test — hardware-specific numerical correctness bug in matrix multiply on Blackwell GPUs. Domain relevance: max_autotune for `mm` on Blackwell selects different CUDA kernels; numerical mismatches require debugging CUDA kernel selection and sm_120 architecture compatibility.",
+  "stage": "validated",
+  "linked_prs": [],
+  "maintainer_signals": [
+    {
+      "author": "Aidyn-A",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Seems like setting 'highest' in [...test_max_autotune.py#L86] alters the kernel selection back to triton_mm_plus_mm"
+    },
+    {
+      "author": "eqy",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Clarifying after some discussion with @Aidyn-A that it doesn't appear to be numerical stability but rather a correctness issue as contiguous strides seems to be OK"
+    },
+    {
+      "author": "nikitaved",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "I can reproduce. [...] the cutlass kernel is being selected. Are we having a cutlass issue here and/or cutlass dispatch? Should try forcing a Triton kernel selection for a clean comparison."
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_module",
+  "affected_hardware": ["cuda", "Blackwell", "GB200"],
+  "still_reproducible": "confirmed",
+  "confidence": 0.75,
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present → +0.25. Running total: 0.75. Step 2: 'triaged' label present → +0.10. Running total: 0.85. Step 3: Repro script present — issue body includes exact pytest command, detailed test failure output with mismatched element counts, and autotune stats; the test can be reproduced with 'pytest test/inductor/test_max_autotune.py::TestMaxAutotune::test_non_contiguous_input_mm_plus_mm' → +0.15. Running total: 1.00. Step 4: COLLABORATOR nikitaved confirmed reproduction ('I can reproduce') and isolated root cause to cutlass kernel dispatch for non-contiguous inputs on Blackwell → still_reproducible = 'confirmed'; no additional scoring adjustment but supports positive assessment. Step 5: fix_scope = 'single_module' (Inductor kernel dispatch / mm.py kernel selection for non-contiguous inputs) → +0.10. Running total: 1.10. Step 6: No blocking signals → no negative adjustments. Step 7: Issue less than 2 years old → no +0.05. Step 8: Practical barrier: fix requires Blackwell GPU access; no prior PR attempt means contributor would need to investigate cutlass dispatch in torch._inductor.kernel.mm. However COLLABORATOR debugging narrows the root cause significantly. Clamp to [0.0, 1.0]: Final: 0.75.",
+  "recommended_action": "file_pr",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Like positive_71774, this is a confirmed silent correctness bug with 'module: correctness (silent)' label, triaged status, and multiple COLLABORATOR comments narrowing the root cause. Unlike positive_71774 there is no abandoned fix PR to revive — this needs a fresh PR. The Blackwell-specific hardware requirement is a practical barrier for external contributors (requires GB200 access), but nikitaved's profiling data pointing to the cutlass3x_sm100 kernel is more concrete diagnostic evidence than positive_71774's 'fbgemm only' scoping. The fix_scope appears to be within torch/_inductor/kernel/mm.py and related dispatch logic for non-contiguous inputs on sm_100 architecture.",
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

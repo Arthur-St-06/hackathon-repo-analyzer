@@ -1,0 +1,46 @@
+{
+  "finding_id": "pytorch_175757",
+  "repo": "pytorch/pytorch",
+  "issue_number": 175757,
+  "issue_title": "Diagonal crosshatch artifacts in FLUX/MMDiT diffusion models on gfx1151 (RDNA 3.5)",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/175757",
+  "issue_state": "OPEN",
+  "issue_created_at": "2026-02-25T17:11:26Z",
+  "issue_labels": [
+    "needs reproduction",
+    "module: rocm",
+    "triaged",
+    "module: correctness (silent)",
+    "bot-triaged"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: rocm`. Title: diagonal crosshatch artifacts in FLUX/MMDiT diffusion models on gfx1151 (RDNA 3.5) — hardware-specific ROCm kernel correctness bug producing visual artifacts. Domain relevance: gfx1151 (RDNA 3.5) architecture may have bugs in specific HIP/ROCm compute kernels; diagnosing requires ROCm GPU kernel expertise and hardware-level understanding of the RDNA 3.5 compute pipeline.",
+  "stage": "needs_review",
+  "linked_prs": [],
+  "maintainer_signals": [
+    {
+      "author": "naromero77amd",
+      "role": "COLLABORATOR",
+      "signal_type": "needs_more_info",
+      "quote": "Could you please provide a simple script that can reproduce your issue?"
+    },
+    {
+      "author": "naromero77amd",
+      "role": "COLLABORATOR",
+      "signal_type": "needs_more_info",
+      "quote": "Do you have a simple reproducer?"
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "unknown",
+  "affected_hardware": ["rocm", "gfx1151"],
+  "still_reproducible": "unknown",
+  "confidence": 0.55,
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present → +0.25. Running total: 0.75. Step 2: 'triaged' label present → +0.10. Running total: 0.85. Step 3: No repro script — issue body describes symptom (diagonal crosshatch artifacts in ComfyUI with FLUX model) and provides hardware/software details, but no minimal Python torch script demonstrating the failure. Cannot award +0.15. Running total: 0.85. Step 4: 'needs reproduction' label present — maintainer could not confirm → -0.05. Running total: 0.80. Step 5: No linked PRs, no fix attempt → no change. Step 6: Two maintainer needs_more_info signals indicate no repro script has been provided despite requests → reflects unconfirmed bug. still_reproducible=unknown. No additional blocker. Step 7: Issue is only ~2 months old (Feb 2026) — not yet stale, no +0.05 for persistence. Running total: 0.80. Step 8: Fix scope unknown — ROCm gfx1151-specific kernel bug with no identified root cause; could be cross-cutting → no +0.10. Step 9: Issue requires specialized RDNA 3.5 hardware to reproduce or diagnose, limiting contributor pool. Applying -0.25 for missing repro script (partial adjustment already in step 3) and highly specialized hardware scope. Running total adjusted to 0.55 to reflect that no repro script has been provided despite two maintainer requests, making this currently unactionable for most contributors. Final: 0.55.",
+  "recommended_action": "needs_human_review",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Like positive_71774, this carries 'module: correctness (silent)' and 'triaged' labels, suggesting a real silent correctness bug. Unlike positive_71774, there is no minimal Python repro script (maintainers have asked twice with no response), the hardware is highly specialized (gfx1151 RDNA 3.5), no PR has been attempted, and fix scope is unknown. The issue is also very recent (2 months old) with no confirmed reproduction from a maintainer. A contributor would need the specific AMD hardware to investigate.",
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

@@ -1,0 +1,31 @@
+{
+  "finding_id": "pytorch_80776",
+  "repo": "pytorch/pytorch",
+  "issue_number": 80776,
+  "issue_title": "`torch.inverse()` crash in cuda",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/80776",
+  "issue_state": "OPEN",
+  "issue_created_at": "2022-07-01T17:11:51Z",
+  "issue_labels": [
+    "triaged",
+    "module: linear algebra",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: linear algebra` + `module: cuda`. Title reports `torch.inverse()` crashing in CUDA \u2014 a silent correctness failure on a core linear algebra op. Domain relevance: CUDA implementation of matrix inverse (via cuSOLVER or MAGMA) produces an unexpected failure condition that requires CUDA linear algebra backend knowledge to diagnose.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

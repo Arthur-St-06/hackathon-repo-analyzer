@@ -1,0 +1,91 @@
+{
+  "finding_id": "pytorch_178379",
+  "repo": "pytorch/pytorch",
+  "issue_number": 178379,
+  "issue_title": "[bug]`torch.linalg.solve_triangular(A, B, *, out=B)`: wrong result with `B.is_neg() == True`",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/178379",
+  "issue_state": "OPEN",
+  "issue_created_at": "2026-03-25T13:28:25Z",
+  "issue_labels": [
+    "module: cuda",
+    "triaged",
+    "module: linear algebra",
+    "actionable",
+    "module: correctness (silent)",
+    "bot-triaged"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label \u2014 PyTorch's explicit marker for silent wrong-answer bugs. labeled `actionable`. Maintainer `actionable` label confirms the bug is scoped and can be directly fixed.",
+  "stage": "validated",
+  "linked_prs": [
+    {
+      "number": 178298,
+      "title": "torch.linalg.solve_triangular: support for eligible non-dense args",
+      "url": "https://github.com/pytorch/pytorch/pull/178298",
+      "state": "open",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": null,
+      "reviews_summary": "Active ghstack PR authored by COLLABORATOR nikitaved, who also confirmed in the issue that this PR will fix it. nikitaved has COMMENTED review activity on the PR. No explicit pytorchbot merge request yet but the PR is active and the fix is from the COLLABORATOR who owns this area."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "nikitaved",
+      "role": "COLLABORATOR",
+      "signal_type": "approved_fix",
+      "quote": "Will be addressed in https://github.com/pytorch/pytorch/pull/178298"
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_module",
+  "affected_hardware": [
+    "cuda"
+  ],
+  "still_reproducible": "likely",
+  "confidence": 0.9,
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present (+0.25). Running total: 0.75. Step 2: COLLABORATOR nikitaved confirmed 'Will be addressed in PR #178298' \u2014 this is an approved_fix signal (+0.20). Running total: 0.95. Step 3: Repro script present with exact inputs, repro steps, and different outputs clearly demonstrating wrong results (+0.15). Running total: 1.10. Step 4: 'triaged' label present (+0.10). Running total: 1.20. Step 5: 'actionable' label explicitly present \u2014 maintainer has confirmed this is actionable and scoped. (captured in approved_fix signal above). Step 6: No blocking signals (empty array). Step 7: fix_scope is single_module (linalg module). No +0.10 bonus (not single_function or single_file). Step 8: Issue only ~4 weeks old, no staleness penalty. Step 9: Active open PR #178298 from the COLLABORATOR who owns this module. Clamp to [0.0, 1.0]: 1.00. Adjusted to 0.90 to reflect that PR #178298 has not yet been approved by a second maintainer and is a ghstack stack with multiple PRs.",
+  "recommended_action": "contribute_to_active_pr",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Very similar to positive_71774: silent correctness bug, triaged, repro script, COLLABORATOR-confirmed fix PR. Unlike positive_71774, the fix PR (#178298) is open (not closed/abandoned) and was authored by a COLLABORATOR who owns the linalg module, making this more actionable. The fix scope is single_module (linalg) rather than single_function, slightly reducing confidence. The 'actionable' label provides explicit triage confirmation that positive_71774 lacked. Overall this is a stronger positive signal than the reference.",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T20:20:31Z",
+  "contribution_path": [
+    {
+      "step": 1,
+      "title": "Read the abandoned PR diff",
+      "description": "Study PR #178298 ('torch.linalg.solve_triangular: support for eligible non-dense args') to understand the approach before writing any code. Note which files changed and the overall diff size.",
+      "link": "https://github.com/pytorch/pytorch/pull/178298",
+      "warning": null
+    },
+    {
+      "step": 2,
+      "title": "Reproduce the bug on current main",
+      "description": "Clone pytorch/pytorch main and run the minimal repro from issue #178379. Confirm the bug still exists before investing time in the fix.",
+      "link": "https://github.com/pytorch/pytorch/issues/178379",
+      "warning": null
+    },
+    {
+      "step": 3,
+      "title": "Apply the fix on current main",
+      "description": "PR #178298 is actively worked by COLLABORATOR nikitaved (who filed the issue and the fix). Check whether the PR is still open \u2014 if so, contribute a review or test rather than filing a competing PR. If the PR has been abandoned, base your work directly on its diff.",
+      "link": "https://github.com/pytorch/pytorch/pull/178298",
+      "warning": "COLLABORATOR nikitaved is the issue author and PR author \u2014 filing a competing PR without checking with them first would be bad form."
+    },
+    {
+      "step": 4,
+      "title": "Run tests and add a regression test",
+      "description": "Run `python test/test_linalg.py -k solve_triangular`. Add a test for the aliased case: `solve_triangular(A, B, out=B)` with a non-square B.",
+      "link": null,
+      "warning": null
+    },
+    {
+      "step": 5,
+      "title": "Open a new PR",
+      "description": "Submit a PR with 'Fixes #178379' and 'Revives #178298' in the body. Tag @nikitaved for review \u2014 they already know the issue and the fix approach.",
+      "link": "https://github.com/pytorch/pytorch/issues/178379",
+      "warning": "COLLABORATOR nikitaved is actively working PR #178298. Check in with them before filing a competing PR."
+    }
+  ]
+}

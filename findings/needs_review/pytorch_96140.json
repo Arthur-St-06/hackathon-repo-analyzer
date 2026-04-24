@@ -1,0 +1,66 @@
+{
+  "finding_id": "pytorch_96140",
+  "repo": "pytorch/pytorch",
+  "issue_number": 96140,
+  "issue_title": "mkldnn matmul kernel may be slower than openblas kernel for very small tensor shapes",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/96140",
+  "issue_state": "OPEN",
+  "issue_created_at": "2023-03-06T22:24:05Z",
+  "issue_labels": [
+    "module: performance",
+    "module: performance",
+    "triaged",
+    "module: mkldnn"
+  ],
+  "body_preview": "",
+  "initial_classification": "missing_fast_path",
+  "surface_reasoning": "Priority 3: labeled `module: performance` + `module: mkldnn`. Title: 'mkldnn matmul kernel may be slower than openblas kernel for very small tensor shapes' — dispatch bug where oneDNN (MKLDNN) matmul underperforms a simpler OpenBLAS path for small tensors. Domain relevance: MKLDNN matmul kernel selection should fall back to a faster implementation for small shapes; this requires knowledge of the MKLDNN dispatch heuristics and BLAS performance characteristics.",
+  "stage": "needs_review",
+  "linked_prs": [
+    {
+      "number": 96141,
+      "title": "[aarch64] add runtime enable/disable for mkldnn matmul kernel",
+      "url": "https://github.com/pytorch/pytorch/pull/96141",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "PR was the main branch version of the fix. Author (snadampal) updated it based on malfet's feedback from PR #96169, ran CI successfully, and pinged malfet multiple times for review. No review was ever submitted on this PR (0 reviews). It was eventually marked stale and closed by github-actions bot — abandoned due to reviewer non-response, not rejection.",
+      "reviews_summary": "0 reviews submitted on this PR. Author explicitly requested malfet to approve after addressing feedback from the sister PR #96169. Malfet approved PR #96169 (the 2.0 branch version) twice, indicating the approach was accepted, but never reviewed the main branch version before it went stale."
+    },
+    {
+      "number": 96169,
+      "title": "add runtime enable/disable for mkldnn matmul kernel",
+      "url": "https://github.com/pytorch/pytorch/pull/96169",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "PR targeted the release/2.0 branch. Reviewer malfet approved it twice (with minor nit comments). Closed in favor of PR #96141 (main branch version), as confirmed by kit1980's comment: 'Closing this in favor of https://github.com/pytorch/pytorch/pull/96141'.",
+      "reviews_summary": "COLLABORATOR malfet submitted APPROVED review twice (with nit comments about constexpr and TORCH_ prefix). The PR approach was approved. Closed explicitly in favor of the main branch PR #96141 which itself went stale."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "mingfeima",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "The onednn kernels are jitted so it will spend some additional time on creating the kernel primitive, for small shapes the overhead might be too big."
+    },
+    {
+      "author": "jgong5",
+      "role": "COLLABORATOR",
+      "signal_type": "needs_more_info",
+      "quote": "I'd like to understand the cause of the problem first. Have you analyzed the performance breakdown of these oneDNN calls?"
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_module",
+  "affected_hardware": ["cpu", "aarch64"],
+  "still_reproducible": "likely",
+  "confidence": 0.65,
+  "confidence_justification": "Start: 0.50. Step 1: 'triaged' label present → +0.10. Running total: 0.60. Step 2: No repro script — issue body describes affected tensor shapes (12x12x64:12x64x12:12x12x12) and discusses the behavior qualitatively but provides no runnable Python script demonstrating the slowdown. Applying partial +0.05 for clear failure description with specific shapes. Running total: 0.65. Step 3: Issue open 3.1 years (March 2023) → +0.05. Running total: 0.70. Step 4: No 'module: correctness (silent)' label — this is a performance issue, not silent wrong answer → no +0.25. Step 5: Two abandoned PRs exist (#96141, #96169). PR #96169 was APPROVED by malfet twice but closed in favor of #96141. PR #96141 was abandoned due to reviewer non-response despite passing CI and addressing feedback. These are abandoned (not rejected) — the fix approach is feasible and was technically approved. However, neither PR was ever merged. No +0.20 for approved_fix since the approval was on the 2.0 branch PR that was superseded. Running total: 0.70. Step 6: fix_scope is 'single_module' → no +0.10 (only single_function or single_file qualify). Step 7: No hard blocking signals. Running total: 0.70. Step 8: The abandoned PRs reduce but don't block actionability — a contributor could revive PR #96141 or file a fresh PR. However, the fact that the PR sat ignored despite multiple pings raises questions about current maintainer appetite. Applying -0.05 as mild uncertainty signal. Final: 0.65.",
+  "recommended_action": "needs_human_review",
+  "closest_ground_truth": "ambiguous_72408",
+  "ground_truth_delta": "Like ambiguous_72408, this is a real performance issue with maintainer engagement but no merged fix. Unlike ambiguous_72408, there is no explicit 'no real way to act on this' statement — in fact, two PRs were written with an approved approach. The issue is less ambiguous than ambiguous_72408: the fix path (runtime env var or heuristic for small shapes) is known and was technically approved. The main obstacle is maintainer review bandwidth, not fundamental infeasibility. This finding is more actionable than ambiguous_72408 but lacks the correctness label and confirmed-merge signal of positive_71774.",
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

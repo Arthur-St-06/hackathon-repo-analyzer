@@ -1,0 +1,89 @@
+{
+  "finding_id": "pytorch_163539",
+  "repo": "pytorch/pytorch",
+  "issue_number": 163539,
+  "issue_title": "conv3d bfloat16 wrong result",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/163539",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-09-22T18:21:19Z",
+  "issue_labels": [
+    "high priority",
+    "module: cudnn",
+    "module: cuda",
+    "triaged",
+    "module: regression",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label — PyTorch's explicit marker for silent wrong-answer bugs. labeled `high priority`. Maintainer `high priority` label confirms the bug is important and acknowledged.",
+  "stage": "rejected",
+
+  "linked_prs": [
+    {
+      "number": 164027,
+      "title": "[cuDNN][Convolution] Disable cuDNN for 3D convolutions with kernel size != 1 for cuDNN 9.8+",
+      "url": "https://github.com/pytorch/pytorch/pull/164027",
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2025-09-29T16:07:14Z",
+      "abandoned_reason": null,
+      "reviews_summary": "COLLABORATOR Camyll submitted an APPROVED review. PR was merged on 2025-09-29 as a workaround that disables the cuDNN code path for 3D convolutions with kernel size != 1 on cuDNN 9.8+."
+    },
+    {
+      "number": 163581,
+      "title": "[cuDNN][Convolution] Disable cuDNN for 3D convolutions with kernel size != 1 for cuDNN 9.8+",
+      "url": "https://github.com/pytorch/pytorch/pull/163581",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "Earlier draft of the same workaround, superseded by PR #164027 which was the version that landed.",
+      "reviews_summary": "No reviews recorded; closed in favor of #164027."
+    }
+  ],
+
+  "maintainer_signals": [
+    {
+      "author": "eqy",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Thanks, I think the failure is visible in 9.8 as well. Are you able to upgrade to a current nightly as I see the failure seems to go away in 9.13? Will forward to the cuDNN team and work bypassing cuDNN For 9.8-9.10 in the meantime."
+    },
+    {
+      "author": "eqy",
+      "role": "COLLABORATOR",
+      "signal_type": "partial_fix",
+      "quote": "Let's consider disabling cuDNN path for now as we have a fallback to im2col (vol2col), will craft a smaller repro for this"
+    },
+    {
+      "author": "Skylion007",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Let @eqy, we have several mutual bugs that may make us need to update CUDNN anyway"
+    }
+  ],
+
+  "blocking_signals": [
+    "already_fixed: #164027 merged at 2025-09-29T16:07:14Z"
+  ],
+
+  "fix_scope": "single_module",
+
+  "affected_hardware": ["cuda", "cudnn"],
+
+  "still_reproducible": "unlikely",
+
+  "confidence": 0.05,
+
+  "confidence_justification": "Step 1: 'already_fixed' blocking signal present — PR #164027 merged 2025-09-29 as a workaround disabling the cuDNN path for 3D convolutions on cuDNN 9.8+. Per the precedence rule: skip all other signals and set confidence to 0.05. The root cause is a cuDNN library bug in versions 9.8-9.10 which 'seems to go away in 9.13' per COLLABORATOR eqy. The PyTorch-side workaround has landed. Final: 0.05.",
+
+  "recommended_action": "reject",
+
+  "closest_ground_truth": "positive_71774",
+
+  "ground_truth_delta": "Unlike positive_71774 (which has an approved-but-unmerged fix that needs revival), pytorch_163539 already has a merged workaround PR #164027. The root cause lies in the cuDNN 9.8-9.10 library itself — not in PyTorch code — and eqy confirmed the issue disappears in cuDNN 9.13. A contributor cannot fix a bug in an external library. The issue remains OPEN only as a tracking entry while the cuDNN team addresses the upstream defect.",
+
+  "stage": "rejected",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

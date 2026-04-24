@@ -1,0 +1,33 @@
+{
+  "finding_id": "pytorch_173638",
+  "repo": "pytorch/pytorch",
+  "issue_number": 173638,
+  "issue_title": "`torch.linalg.slogdet` does not propagate `NaN` in CUDA",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/173638",
+  "issue_state": "OPEN",
+  "issue_created_at": "2026-01-28T12:24:36Z",
+  "issue_labels": [
+    "module: cuda",
+    "triaged",
+    "module: NaNs and Infs",
+    "module: linear algebra",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: cuda` + `module: linear algebra`. Title: `torch.linalg.slogdet` does not propagate NaN in CUDA \u2014 silent failure to propagate NaN through a CUDA linear algebra op. Domain relevance: `slogdet` on CUDA uses cuSOLVER LU factorization; NaN non-propagation is a CUDA kernel-level bug in the sign/log-abs-det computation path.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

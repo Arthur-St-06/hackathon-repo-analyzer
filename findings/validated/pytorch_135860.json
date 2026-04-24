@@ -1,0 +1,87 @@
+{
+  "finding_id": "pytorch_135860",
+  "repo": "pytorch/pytorch",
+  "issue_number": 135860,
+  "issue_title": "Lobpcg for complex gives wrong results.",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/135860",
+  "issue_state": "OPEN",
+  "issue_created_at": "2024-09-12T11:16:17Z",
+  "issue_labels": [
+    "triaged",
+    "module: complex",
+    "module: linear algebra",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: linear algebra` + `module: complex`. Title: LOBPCG for complex tensors gives wrong results \u2014 silent error in a complex-valued eigenvalue solver. Domain relevance: LOBPCG on complex matrices exercises the complex linear algebra kernel path and requires understanding of complex BLAS operations to debug.",
+  "linked_prs": [
+    {
+      "number": 171314,
+      "title": "Add the complex support to torch.lopbcg",
+      "url": "https://github.com/pytorch/pytorch/pull/171314",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "PR was marked Stale by github-actions bot and closed without merge. Review requests were sent to lezcano, IvanYashchuk, and pearu, but only nikitaved left COMMENTED (not APPROVED) reviews. No pytorchbot merge request was issued. The PR appears to have been abandoned by the author before receiving a full review cycle.",
+      "reviews_summary": "nikitaved left four COMMENTED reviews (no APPROVE or CHANGES_REQUESTED). No formal approval was given. Review was requested from lezcano, IvanYashchuk, and pearu \u2014 core linalg maintainers \u2014 but none responded before the PR went stale."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "pearu",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "FYI, torch.lobpcg implementation does not support complex inputs. To add the complex support to torch.lobpcg, its algorithm needs to be revised (e.g. use eigh instead of symeig, etc) and add tests."
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_file",
+  "affected_hardware": [],
+  "still_reproducible": "likely",
+  "confidence": 0.85,
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present \u2192 +0.25. Running total: 0.75. Step 2: No approved_fix or requested_merge maintainer signal \u2014 no bonus. COLLABORATOR pearu provided scoped_bug signal (algorithm needs revision for complex support) \u2014 informational. Step 3: Repro script is present (complete self-contained Python with torch.lobpcg, scipy comparison, and torch.linalg.eigh for ground truth) \u2192 +0.15. Running total: 0.90. Step 4: 'triaged' label present \u2192 +0.10. Running total: 1.00. Step 5: fix_scope = single_file (torch.lobpcg implementation is in a single Python file; adding complex support via eigh as pearu suggests is a contained change) \u2192 +0.10. Running total: 1.10. Step 6: Issue open ~1.5 years \u2014 does not meet 2+ year threshold; no +0.05. Step 7: No blocking signals. A linked PR exists (171314) but was abandoned/stale without approval or merge request \u2014 not a pr_rejected signal. still_reproducible = 'likely' (repro script present, pearu confirmed the algorithm gap, no fix landed). No negative adjustments apply. Final (clamped to 1.0): 1.00. Adjusted down slightly: PR 171314 was abandoned without maintainer approval, and the issue is only 1.5 years old \u2014 slightly less conviction than the perfect case. Final: 0.85.",
+  "recommended_action": "revive_abandoned_pr",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Very similar to positive_71774: silent correctness bug (module: correctness (silent)), clear repro script, triaged, COLLABORATOR scoped the root cause, and an abandoned fix PR exists. Key differences: (1) the abandoned PR (171314) was never approved \u2014 no APPROVED review and no pytorchbot merge request, unlike 71774's ngimel-approved and merge-requested PR 75200; (2) fix scope is single_file (Python-level algorithm change) vs. single_function (C++ addmm_cpu kernel), making this potentially more accessible to contributors; (3) pearu explicitly described the algorithmic fix needed ('use eigh instead of symeig'), providing a clear contributor roadmap; (4) issue is only ~1.5 years old vs. 4+ years, reducing staleness risk. Overall similarly actionable \u2014 the lack of a formal PR approval is the main gap.",
+  "stage": "validated",
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T20:12:49Z",
+  "contribution_path": [
+    {
+      "step": 1,
+      "title": "Read the abandoned PR diff",
+      "description": "Study PR #171314 ('Add the complex support to torch.lopbcg') to understand the approach before writing any code. Note which files changed and the overall diff size.",
+      "link": "https://github.com/pytorch/pytorch/pull/171314",
+      "warning": "What killed this PR: PR was marked Stale by github-actions bot and closed without merge. Review requests were sent to lezcano, IvanYashchuk, and pearu, but only nikitaved left COMMENTED (not APPROVED) reviews. No pytorchb"
+    },
+    {
+      "step": 2,
+      "title": "Reproduce the bug on current main",
+      "description": "Clone pytorch/pytorch main and run the minimal repro from issue #135860. Confirm the bug still exists before investing time in the fix.",
+      "link": "https://github.com/pytorch/pytorch/issues/135860",
+      "warning": null
+    },
+    {
+      "step": 3,
+      "title": "Apply the fix on current main",
+      "description": "Implement complex support for torch.lobpcg as suggested by COLLABORATOR pearu: use `torch.linalg.eigh` (or its internal equivalent) instead of `torch.symeig` for the complex Hermitian case. PR #171314 began this work but went stale before nikitaved could formally approve \u2014 the approach is uncontested.",
+      "link": "https://github.com/pytorch/pytorch/pull/171314",
+      "warning": null
+    },
+    {
+      "step": 4,
+      "title": "Run tests and add a regression test",
+      "description": "Run `python test/test_linalg.py -k lobpcg` with complex dtype inputs. PR #171314 updated the test suite for complex lobpcg \u2014 port those test updates.",
+      "link": null,
+      "warning": null
+    },
+    {
+      "step": 5,
+      "title": "Open a new PR",
+      "description": "Submit a PR with 'Fixes #135860' and 'Revives #171314' in the body. Tag @pearu for review \u2014 they already know the issue and the fix approach.",
+      "link": "https://github.com/pytorch/pytorch/issues/135860",
+      "warning": null
+    }
+  ]
+}

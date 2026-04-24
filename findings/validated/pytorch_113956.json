@@ -1,0 +1,57 @@
+{
+  "finding_id": "pytorch_113956",
+  "repo": "pytorch/pytorch",
+  "issue_number": 113956,
+  "issue_title": "iSTFT gives wrong results for some batched input",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/113956",
+  "issue_state": "OPEN",
+  "issue_created_at": "2023-11-17T16:20:30Z",
+  "issue_labels": [
+    "module: cuda",
+    "triaged",
+    "module: correctness (silent)",
+    "module: fft"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: cuda` + `module: fft`. Title reports iSTFT giving wrong results for some batched inputs — FFT correctness bug that is silent (no exception raised). Domain relevance: batched CUDA FFT correctness requires knowledge of cuFFT batch dimension handling and the CUDA iSTFT kernel implementation.",
+
+  "linked_prs": [],
+
+  "maintainer_signals": [
+    {
+      "author": "eqy",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Reproduced, will forward to cuFFT."
+    },
+    {
+      "author": "eqy",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "Still working with cuFFT on this, but they pointed to 'Performance optimizations in batched mode can combine signal from different batches for processing.'"
+    }
+  ],
+
+  "blocking_signals": [],
+
+  "fix_scope": "single_module",
+
+  "affected_hardware": ["cuda", "A100"],
+
+  "still_reproducible": "likely",
+
+  "confidence": 0.75,
+
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present → +0.25. Running total: 0.75. Step 2: No approved_fix or requested_merge maintainer signal — no bonus. Step 3: Repro script is present (complete Python code block with torch.istft calls, actual vs. expected output showing wrong values, downloadable data file) → +0.15. Running total: 0.90. Step 4: 'triaged' label present → +0.10. Running total: 1.00. Step 5: fix_scope = single_module (cuFFT/iSTFT within the FFT module) — not single_function/single_file, no +0.10. Step 6: Issue open ~2.5 years, meets 2+ year threshold → +0.05. Running total: 1.05. Step 7: No blocking signals. No by_design or wont_fix. Maintainer eqy confirmed reproduction and escalated to cuFFT team — positive engagement. The cuFFT 'batching combines signals' note is an upstream explanation, not a PyTorch wont_fix signal. still_reproducible = 'likely' (no indication of a fix). No negative adjustments apply. Final (clamped to 1.0): 1.00. However, cuFFT's upstream behavior explanation introduces uncertainty about actionability for a PyTorch contributor; reducing to 0.75 to reflect that the fix may require coordination with NVIDIA's cuFFT team rather than a pure PyTorch code change. Final: 0.75.",
+
+  "recommended_action": "file_pr",
+
+  "closest_ground_truth": "positive_71774",
+
+  "ground_truth_delta": "Like positive_71774, this is a silent correctness bug (module: correctness (silent)) with a clear repro script and triaged label, confirmed reproduced by a COLLABORATOR. Key differences: (1) no linked fix PR exists — no revive_abandoned_pr opportunity; (2) the root cause may be in upstream cuFFT behavior (NVIDIA's batching optimization combines signals across batches), meaning a PyTorch-only fix might require adding documentation or input validation rather than a kernel fix; (3) the issue is ~0.5 years younger than 71774, slightly less stale risk. Overall slightly less actionable than 71774 (no approved fix path) but clearly in the same positive category.",
+
+  "stage": "validated",
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

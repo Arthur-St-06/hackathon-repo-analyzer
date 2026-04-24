@@ -1,0 +1,101 @@
+{
+  "finding_id": "pytorch_136299",
+  "repo": "pytorch/pytorch",
+  "issue_number": 136299,
+  "issue_title": "The results of baddbmm on CPU seem to have issues under certain conditions",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/136299",
+  "issue_state": "OPEN",
+  "issue_created_at": "2024-09-19T01:57:44Z",
+  "issue_labels": [
+    "high priority",
+    "triaged",
+    "module: regression",
+    "module: correctness (silent)",
+    "module: arm"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label \u2014 PyTorch's explicit marker for silent wrong-answer bugs. labeled `high priority`. Maintainer `high priority` label confirms the bug is important and acknowledged.",
+  "linked_prs": [
+    {
+      "number": 136371,
+      "title": "Fix addmm silent correctness on aarch64",
+      "url": "https://github.com/pytorch/pytorch/pull/136371",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "Author (malfet, CONTRIBUTOR) force-merged via '@pytorchbot merge -f' but GitHub API reports merged=false on main. Author subsequently reopened the issue commenting 'Re-opening the issue for a bit more involved fix (as current API is brittle), but will cherry-pick minimal fix into 2.5' \u2014 indicating the main-branch fix was intentionally deferred in favor of a more robust approach. CONTRIBUTOR swolchok had APPROVED the PR. Cherry-picked to release/2.5 as PR #137208.",
+      "reviews_summary": "CONTRIBUTOR swolchok submitted an APPROVED review. Author malfet issued '@pytorchbot merge -f' but the fix was intentionally not landed on main. The quick fix was cherry-picked to release/2.5 (PR #137208, merged 2024-10-02)."
+    },
+    {
+      "number": 137208,
+      "title": "Fix addmm silent correctness on aarch64",
+      "url": "https://github.com/pytorch/pytorch/pull/137208",
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2024-10-02T21:50:52Z",
+      "abandoned_reason": null,
+      "reviews_summary": "Cherry-pick of PR #136371 onto release/2.5. CONTRIBUTOR kit1980 approved. Merged 2024-10-02. This only fixed release/2.5, not main branch."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "bdhirsh",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "I can repro on a recent main commit too"
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_function",
+  "affected_hardware": [
+    "cpu",
+    "aarch64"
+  ],
+  "still_reproducible": "likely",
+  "confidence": 0.95,
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label \u2014 PyTorch's highest-priority bug category, silent wrong-answer bug \u2192 +0.25. Running total: 0.75. Step 2: Self-contained repro script in issue body \u2014 complete Python code using torch.baddbmm with specific tensor shapes, demonstrates that baddbmm results are identical for different alpha values (0.1 vs 0.2) when they should differ \u2192 +0.15. Running total: 0.90. Step 3: 'triaged' label present \u2192 +0.10. Running total: 1.00. Step 4: fix_scope = single_function (identified as the fast gemmv dispatch path in aarch64 BLAS, regression introduced by PR #127478) \u2192 +0.10. Running total: 1.10. Step 5: COLLABORATOR bdhirsh confirmed reproduction on main (scoped_bug signal). Step 6: PR #136371 exists with approved review \u2014 a contributor identified root cause, wrote a fix, got it approved, but deferred main-branch landing to write a better approach. Author commented 'Re-opening the issue for a bit more involved fix' \u2014 confirming a fix is needed. This is a revive_abandoned_pr scenario. No blocking signals. No already_fixed blocker (main branch still needs fix). Step 7: Issue open since Sep 2024, ~1.5 years \u2014 mild staleness (+0.05 for open 2+ years does not yet apply at 1.5y). Step 8: No negative adjustments. Clamp to 1.0. Final: 1.00.",
+  "recommended_action": "revive_abandoned_pr",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Very similar to positive_71774: both are silent correctness bugs (module: correctness (silent)), both have self-contained repro scripts, both have COLLABORATOR confirmation, and both have approved-but-unmerged fix PRs on main. Key differences: (1) issue 136299 is newer (~1.5 years vs 4+ years), reducing staleness risk; (2) the root cause was explicitly identified by the author as an aarch64-specific regression from a specific PR; (3) a partial fix DID land on release/2.5 via cherry-pick, confirming the fix approach is viable \u2014 contributor only needs to implement the more robust main-branch version that the author described as 'less brittle'.",
+  "stage": "validated",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T20:12:49Z",
+  "contribution_path": [
+    {
+      "step": 1,
+      "title": "Read the abandoned PR diff",
+      "description": "Study PR #136371 ('Fix addmm silent correctness on aarch64') to understand the approach before writing any code. Note which files changed and the overall diff size. The PR received a COLLABORATOR APPROVED review \u2014 the fix approach is already validated.",
+      "link": "https://github.com/pytorch/pytorch/pull/136371",
+      "warning": "What killed this PR: Author (malfet, CONTRIBUTOR) force-merged via '@pytorchbot merge -f' but GitHub API reports merged=false on main. Author subsequently reopened the issue commenting 'Re-opening the issue for a bit more"
+    },
+    {
+      "step": 2,
+      "title": "Reproduce the bug on current main",
+      "description": "Clone pytorch/pytorch main and run the minimal repro from issue #136299. Confirm the bug still exists before investing time in the fix.",
+      "link": "https://github.com/pytorch/pytorch/issues/136299",
+      "warning": null
+    },
+    {
+      "step": 3,
+      "title": "Apply the fix on current main",
+      "description": "Adapt the fix from PR #136371 to current main. PR #137208 (the cherry-pick) merged successfully onto release/2.5, confirming the approach is correct \u2014 apply the same logic to main. Compare the two diffs to understand what the release backport changed.",
+      "link": "https://github.com/pytorch/pytorch/pull/136371",
+      "warning": "pytorchbot shows merged=false for PR #136371 despite '@pytorchbot merge -f' being issued \u2014 this is a GitHub API race condition, not a rejection. The fix logic itself was accepted."
+    },
+    {
+      "step": 4,
+      "title": "Run tests and add a regression test",
+      "description": "Run `python test/test_linalg.py -k baddbmm`. PR #136371 added test cases \u2014 include them in the new PR and verify they pass on main.",
+      "link": null,
+      "warning": null
+    },
+    {
+      "step": 5,
+      "title": "Open a new PR",
+      "description": "Submit a PR with 'Fixes #136299' and 'Revives #136371 and #137208' in the body. Tag @bdhirsh for review \u2014 they already know the issue and the fix approach.",
+      "link": "https://github.com/pytorch/pytorch/issues/136299",
+      "warning": null
+    }
+  ]
+}

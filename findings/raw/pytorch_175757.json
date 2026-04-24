@@ -1,0 +1,33 @@
+{
+  "finding_id": "pytorch_175757",
+  "repo": "pytorch/pytorch",
+  "issue_number": 175757,
+  "issue_title": "Diagonal crosshatch artifacts in FLUX/MMDiT diffusion models on gfx1151 (RDNA 3.5)",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/175757",
+  "issue_state": "OPEN",
+  "issue_created_at": "2026-02-25T17:11:26Z",
+  "issue_labels": [
+    "needs reproduction",
+    "module: rocm",
+    "triaged",
+    "module: correctness (silent)",
+    "bot-triaged"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: rocm`. Title: diagonal crosshatch artifacts in FLUX/MMDiT diffusion models on gfx1151 (RDNA 3.5) \u2014 hardware-specific ROCm kernel correctness bug producing visual artifacts. Domain relevance: gfx1151 (RDNA 3.5) architecture may have bugs in specific HIP/ROCm compute kernels; diagnosing requires ROCm GPU kernel expertise and hardware-level understanding of the RDNA 3.5 compute pipeline.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

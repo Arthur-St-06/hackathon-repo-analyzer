@@ -1,0 +1,52 @@
+{
+  "finding_id": "pytorch_120622",
+  "repo": "pytorch/pytorch",
+  "issue_number": 120622,
+  "issue_title": "_native_batch_norm_legit doesn't bump version counter of buffers",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/120622",
+  "issue_state": "OPEN",
+  "issue_created_at": "2024-02-26T17:48:19Z",
+  "issue_labels": [
+    "high priority",
+    "module: autograd",
+    "triaged",
+    "module: codegen",
+    "module: correctness (silent)",
+    "module: norms and normalization"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: carries `module: correctness (silent)` label — PyTorch's explicit marker for silent wrong-answer bugs. labeled `high priority`. Maintainer `high priority` label confirms the bug is important and acknowledged.",
+  "stage": "validated",
+  "linked_prs": [
+    {
+      "number": 116092,
+      "title": "Batch Norm Consolidation",
+      "url": "https://github.com/pytorch/pytorch/pull/116092",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "ghstack PR that cross-referenced issue #120622 via a comment ('cc @andrewor14 - we should make sure that the new batch norm op doesn't have this problem'). This PR is a large batch norm consolidation refactoring (batch_norm_with_update) and does not directly fix the version counter bug in _native_batch_norm_legit. The PR has both 'Merged' and 'Reverted' labels, indicating it was merged then reverted multiple times for CI failures. The issue #120622 remains OPEN, confirming the specific version counter fix has not landed.",
+      "reviews_summary": "COLLABORATOR bdhirsh submitted APPROVED review. COLLABORATOR albanD submitted APPROVED review. CONTRIBUTOR andrewor14 wrote '@pytorchbot merge' multiple times. The PR was a ghstack artifact; it was merged, reverted twice (ROCm and AMD build failures), then re-merged on 2024-03-18. GitHub API shows mergedAt=null with Merged+Reverted labels — ghstack artifact status. The _native_batch_norm_legit version counter fix is not part of this PR's scope."
+    }
+  ],
+  "maintainer_signals": [
+    {
+      "author": "bdhirsh",
+      "role": "COLLABORATOR",
+      "signal_type": "scoped_bug",
+      "quote": "cc @andrewor14 - we should make sure that the new batch norm op doesn't have this problem"
+    }
+  ],
+  "blocking_signals": [],
+  "fix_scope": "single_function",
+  "affected_hardware": [],
+  "still_reproducible": "likely",
+  "confidence": 0.90,
+  "confidence_justification": "Start: 0.50. Step 1: module: correctness (silent) label present → +0.25. Running total: 0.75. Step 2: Repro script present — concise, self-contained Python snippet showing version counter not incrementing after _native_batch_norm_legit call → +0.15. Running total: 0.90. Step 3: triaged label present → +0.10. Running total: 1.00. Step 4: fix_scope is single_function — version counter bumping is typically done in a single op registration location or codegen schema entry → +0.10. Running total: 1.10. Step 5: No blocking signals present → no deduction. Step 6: Issue is under 2 years old (Feb 2024) so no +0.05 for persistence. Step 7: No maintainer wont_fix or blocked_action signals. The only maintainer comment (bdhirsh) is a scoped_bug signal pointing to a follow-up fix needed. Step 8: No approved_fix or requested_merge signal → no +0.40. Clamp to [0.0, 1.0]: 1.00. Adjusted downward: bdhirsh's comment is about the NEW op (batch_norm_with_update), not a direct assignment to fix _native_batch_norm_legit. Only 2 comments in 2 months with no follow-up. The module: codegen label means the fix may need codegen changes beyond a single C++ function, slightly broadening the scope. Final adjusted: 0.90.",
+  "recommended_action": "file_pr",
+  "closest_ground_truth": "positive_71774",
+  "ground_truth_delta": "Strong match with positive_71774 profile: silent correctness bug (version counter not bumped means autograd could use stale cached values), concise repro script, triaged + high priority + correctness (silent) labels, and narrow single-function scope. Key differences from positive_71774: (1) no approved-but-abandoned PR specifically targeting this bug — the linked PR #116092 is a broad refactoring that doesn't directly fix the version counter issue; (2) the issue was flagged by a COLLABORATOR (bdhirsh) pointing to the new op needing to avoid the same problem, implying the fix path is clear but unimplemented; (3) no maintainer has written a PR or requested a merge for this specific fix. This is slightly less actionable than positive_71774 due to the absence of a specific fix attempt, but has all the other positive signals.",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T17:00:00Z"
+}

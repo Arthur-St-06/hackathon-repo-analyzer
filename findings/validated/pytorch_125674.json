@@ -1,0 +1,43 @@
+{
+  "finding_id": "pytorch_125674",
+  "repo": "pytorch/pytorch",
+  "issue_number": 125674,
+  "issue_title": "[BUG]Nan in gradients of scaled_dot_product_attention operation with mem_efficient backend",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/125674",
+  "issue_state": "OPEN",
+  "issue_created_at": "2024-05-07T10:19:14Z",
+  "issue_labels": [
+    "triaged",
+    "module: correctness (silent)",
+    "module: sdpa"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: sdpa`. Title: NaN in gradients of `scaled_dot_product_attention` with memory-efficient backend — silent NaN production in the CUDA attention backward kernel. Domain relevance: the memory-efficient SDPA backend is a fused CUDA attention kernel; NaN production in its backward pass requires kernel-level debugging of the gradient accumulation logic.",
+
+  "linked_prs": [],
+
+  "maintainer_signals": [],
+
+  "blocking_signals": [],
+
+  "fix_scope": "single_module",
+
+  "affected_hardware": ["cuda"],
+
+  "still_reproducible": "likely",
+
+  "confidence": 0.75,
+
+  "confidence_justification": "Start: 0.50. Step 1: 'module: correctness (silent)' label present → +0.25. Running total: 0.75. Step 2: No maintainer (COLLABORATOR/MEMBER/OWNER) comments found — drisspg is CONTRIBUTOR only, no maintainer signal bonus. Step 3: Repro script is present (self-contained Python script with TransformerEncoderLayer, pip show torch output, exact error traceback shown in issue body) → +0.15. Running total: 0.90. Step 4: 'triaged' label present → +0.10. Running total: 1.00. Step 5: fix_scope = single_module (mem_efficient SDPA backend within the sdpa module) — not single_function/single_file, no +0.10. Step 6: Issue open ~2 years (May 2024 to Apr 2026), meets 2+ year threshold → +0.05. Running total: 1.05. Step 7: No blocking signals. No maintainer wont_fix or blocked_action. still_reproducible = 'likely' (multiple users report same issue; as recent as 2026 per MrForExample comment 'Still same issue in pytorch 2.8.0' though this is NONE association). No negative adjustments apply. Final (clamped to 1.0): 1.00. Adjusted down for fix complexity: the mem_efficient backward kernel is a complex fused CUDA kernel requiring specialist knowledge, and no maintainer has engaged to scope or confirm the root cause — this raises the risk of a contributor fix being rejected. Final: 0.75.",
+
+  "recommended_action": "file_pr",
+
+  "closest_ground_truth": "positive_71774",
+
+  "ground_truth_delta": "Like positive_71774, this is a silent correctness bug (module: correctness (silent)) with a repro script and triaged label. Key differences: (1) no maintainer has confirmed the bug or scoped the root cause — zero maintainer engagement on this issue despite being open 2 years (unlike 71774 where COLLABORATORs ngimel and lezcano engaged); (2) the fix scope is more complex — mem_efficient SDPA backward kernel vs. a single addmm_cpu function; (3) a CONTRIBUTOR cross-referenced a flash-attention issue suggesting the bug might be in dq/dk/dv not being overwritten — a useful clue but unconfirmed by maintainers; (4) a non-maintainer user claims the bug persists in pytorch 2.8.0, suggesting it remains unresolved. Slightly less actionable than 71774 due to lack of maintainer engagement and more complex kernel scope.",
+
+  "stage": "validated",
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

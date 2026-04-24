@@ -1,0 +1,57 @@
+{
+  "finding_id": "pytorch_172537",
+  "repo": "pytorch/pytorch",
+  "issue_number": 172537,
+  "issue_title": "[Regression] 20x slower vision model forward pass in PyTorch 2.9.1 vs 2.8.0",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/172537",
+  "issue_state": "OPEN",
+  "issue_created_at": "2026-01-15T08:12:20Z",
+  "issue_labels": [
+    "high priority",
+    "module: performance",
+    "triaged"
+  ],
+  "body_preview": "",
+  "initial_classification": "performance_regression",
+  "surface_reasoning": "Priority 2: title states a concrete regression multiplier ('20x slower') — quantified before/after performance gap, not a vague complaint. Concrete before/after performance signal satisfies P2 requirement.",
+  "stage": "rejected",
+
+  "linked_prs": [
+    {
+      "number": 177406,
+      "title": "VRAM regression between 2.8.0 and 2.9.1, possibly related to conv3d",
+      "url": "https://github.com/pytorch/pytorch/issues/177406",
+      "state": "closed",
+      "merged": false,
+      "merged_at": null,
+      "abandoned_reason": "This is actually an issue (not a PR) cross-referenced as related. It is now CLOSED, further indicating the regression was resolved upstream.",
+      "reviews_summary": "N/A — this is an issue reference, not a PR."
+    }
+  ],
+
+  "maintainer_signals": [],
+
+  "blocking_signals": [
+    "stale_no_activity: regression confirmed fixed in PyTorch 2.10 per CONTRIBUTOR comment and related issue #166122 CLOSED; issue filed Jan 2026, resolution already in subsequent release"
+  ],
+
+  "fix_scope": "unknown",
+
+  "affected_hardware": ["cuda"],
+
+  "still_reproducible": "unlikely",
+
+  "confidence": 0.15,
+
+  "confidence_justification": "Step 1: No 'module: correctness (silent)' label — performance regression only → no +0.25. Start at 0.50. Step 2: No COLLABORATOR/MEMBER/OWNER maintainer signals → no adjustment. Step 3: Repro script present but requires external dependency (Qwen3-VL model download) — not self-contained. Partial repro signal only → +0.05. Running total: 0.55. Step 4: 'triaged' label present → +0.10. Running total: 0.65. Step 5: fix_scope is 'unknown' — root cause appears tied to cuDNN 9.8-9.10 conv3d path which was addressed in PR #164027 (merged Sep 2025) and the overall regression 'seems fixed in 2.10' → no fix_scope bonus. Step 6: still_reproducible = 'unlikely' — CONTRIBUTOR malfet said 'seems to be fixed in 2.10 release', related issue #166122 CLOSED with user confirming 'PyTorch 2.11 works fine' → -0.10. Running total: 0.55. Step 7: stale_no_activity signal (regression resolved in subsequent release, no actionable open path) → -0.05. Running total: 0.50. Step 8: No maintainer blocking signal but fix is already in place upstream. The issue is a duplicate/downstream symptom of the conv3d cuDNN regression already fixed. Subtract -0.35 for the duplicate/already-resolved nature not captured by blocking_signals above. Final: 0.15.",
+
+  "recommended_action": "reject",
+
+  "closest_ground_truth": "ambiguous_72408",
+
+  "ground_truth_delta": "Like ambiguous_72408, the root cause is outside PyTorch's control (cuDNN 9.8-9.10 library bug). Unlike ambiguous_72408 which has no fix path, pytorch_172537's root cause has already been addressed — the conv3d cuDNN workaround (PR #164027) landed in Sep 2025, and the regression 'seems fixed in 2.10'. This finding is even less actionable than ambiguous_72408 because the issue is already resolved in newer releases, making it a stale tracking entry rather than an open bug.",
+
+  "stage": "rejected",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T12:00:00Z"
+}

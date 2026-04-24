@@ -1,0 +1,33 @@
+{
+  "finding_id": "pytorch_147971",
+  "repo": "pytorch/pytorch",
+  "issue_number": 147971,
+  "issue_title": "Fp8 scaled-mm row-wise is substantially slower than tensor-wise",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/147971",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-02-26T13:09:57Z",
+  "issue_labels": [
+    "module: performance",
+    "module: cuda",
+    "triaged",
+    "topic: performance",
+    "module: floatx (formerly float8)"
+  ],
+  "body_preview": "",
+  "initial_classification": "missing_fast_path",
+  "surface_reasoning": "Priority 3: labeled `module: performance` + `module: cuda` + `module: floatx (formerly float8)`. Title: 'Fp8 scaled-mm row-wise is substantially slower than tensor-wise' \u2014 dispatch bug where fp8 row-wise scaling matmul underperforms tensor-wise scaling. Domain relevance: fp8 scaled matmul uses specialized CUDA tensor core kernels (e.g., cuBLAS with fp8 support); row-wise vs tensor-wise scaling requires different kernel invocations and the slowness indicates wrong dispatch.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}

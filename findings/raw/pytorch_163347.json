@@ -1,0 +1,33 @@
+{
+  "finding_id": "pytorch_163347",
+  "repo": "pytorch/pytorch",
+  "issue_number": 163347,
+  "issue_title": "Incorrect bf16 results in Conv",
+  "issue_url": "https://github.com/pytorch/pytorch/issues/163347",
+  "issue_state": "OPEN",
+  "issue_created_at": "2025-09-19T15:18:27Z",
+  "issue_labels": [
+    "needs reproduction",
+    "triaged",
+    "module: mkldnn",
+    "module: bfloat16",
+    "module: correctness (silent)"
+  ],
+  "body_preview": "",
+  "initial_classification": "correctness_silent",
+  "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: mkldnn` + `module: bfloat16`. Title: incorrect bf16 results in Conv \u2014 silent bfloat16 correctness bug in the oneDNN convolution kernel. Domain relevance: bf16 convolution dispatches to the oneDNN (MKLDNN) kernel; incorrect results require knowledge of bf16 precision handling in the MKLDNN convolution backend.",
+  "stage": "raw",
+  "linked_prs": null,
+  "maintainer_signals": null,
+  "blocking_signals": null,
+  "fix_scope": null,
+  "affected_hardware": null,
+  "still_reproducible": null,
+  "confidence": null,
+  "confidence_justification": null,
+  "recommended_action": null,
+  "closest_ground_truth": null,
+  "ground_truth_delta": null,
+  "created_at": "2026-04-24T10:00:00Z",
+  "updated_at": "2026-04-24T10:00:00Z"
+}
