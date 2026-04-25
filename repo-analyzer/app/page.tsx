@@ -17,12 +17,23 @@ export default function Home() {
   const [instructionSubmitted, setInstructionSubmitted] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingString, setLoadingString] = useState(".");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loadingIssues, setLoadingIssues] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
+
+  function cycleLoadingString(updateLoadingString: (value: string) => void, initialIndex: number) {
+    const loadingStates = [".", "..", "..."];
+    let loadingIndex = initialIndex;
+
+    return setInterval(() => {
+      updateLoadingString(loadingStates[loadingIndex]);
+      loadingIndex = (loadingIndex + 1) % loadingStates.length;
+    }, 333);
+  }
 
   let instructionCharacterLimit = 300;
 
@@ -72,6 +83,22 @@ export default function Home() {
       mounted = false;
     };
   }, [instructionSubmitted, repoUrl]);
+
+  useEffect(() => {
+    const isLoading = loadingCategories || loadingIssues || loadingSummary;
+
+    if (!isLoading) {
+      setLoadingString(".");
+      return;
+    }
+
+    setLoadingString("...");
+    const loadingTimer = cycleLoadingString(setLoadingString, 0);
+
+    return () => {
+      clearInterval(loadingTimer);
+    };
+  }, [loadingCategories, loadingIssues, loadingSummary]);
 
   useEffect(() => {
     let mounted = true;
@@ -163,7 +190,7 @@ export default function Home() {
               }`}
           />
           {instructionSubmitted ? (<></>) : (
-            <div className="pointer-events-none absolute bottom-3 right-5 text-sm text-zinc-500">
+            <div className={`pointer-events-none absolute bottom-3 right-5 text-sm ${instructionsText.length >= instructionCharacterLimit ? "text-red-500" : "text-zinc-500"}`}>
               {instructionsText.length} / {instructionCharacterLimit}
             </div>)}
         </div>
@@ -201,7 +228,7 @@ export default function Home() {
             </button>
           </div>
         ) : loadingCategories ? (
-          <p className="mt-6 text-xl text-zinc-500">Finding categories...</p>
+          <p className="mt-6 text-xl text-zinc-500">Finding categories{loadingString}</p>
         ) : repoUrl != "" && instructionSubmitted ? (
           <div className="mt-6 w-full max-w-2xl text-left">
             <p className="text-zinc-500">Select a category</p>
@@ -238,7 +265,7 @@ export default function Home() {
             </button>
           </div>
         ) : loadingIssues ? (
-          <p className="mt-6 text-xl text-zinc-500">Fetching issue info...</p>
+          <p className="mt-6 text-xl text-zinc-500">Fetching issue info{loadingString}</p>
         ) : selectedCategory ? (
           <div className="mt-6 w-full max-w-2xl text-left">
             <p className="text-zinc-500">Select an issue</p>
@@ -268,7 +295,7 @@ export default function Home() {
         <p className="mt-16 mb-0 text-6xl font-semibold text-zinc-700">Issue Summary</p>
         <div className="mt-6 w-full max-w-2xl rounded-3xl border border-zinc-300 bg-white p-6 text-left text-xl text-zinc-800">
           {loadingSummary ? (
-            <p>Generating summary...</p>
+            <p>Generating summary{loadingString}</p>
           ) : summary ? (
             <p>{summary}</p>
           ) : (
