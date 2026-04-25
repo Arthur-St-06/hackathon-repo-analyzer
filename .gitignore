@@ -2,3 +2,21 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Generated pipeline artifacts — reproduced by running the pipeline
+data/scored_issues.json
+data/selected_topics.json
+data/topic_groups.json
+data/topics.json
+public/data/topic_groups.json
+
+# Temp files written during validation
+/tmp/precheck_*.json
+/tmp/pr_search_*.json
+/tmp/timeline_*.json
+/tmp/validator_output_*.txt
+/tmp/validator_err_*.txt
+/tmp/precheck_err_*.txt
+
+# Validation cache
+findings/cache/
