@@ -6,15 +6,15 @@ function delay() {
 // Tailor the AI agent's selections
 export async function sendInstructions(prompt) {
     // Placeholder for an API call
-    console.log("tailoring output: " + prompt);
+    console.log("Sending instructions: " + prompt);
 }
 
 // Return the issue categories, given the URL
 export async function getCategories(url) {
     // Placeholder for an API call
-    let categories = ["category 1", "category 2", "category 3", "category 4", "category 5",
-        "category 6", "category 7", "category 8", "category 9", "category 10", "category 11",
-        "category 12", "category 13", "category 14", "category 15"];
+    let categories = ["UI/UX", "Authentication", "API", "Database", "Performance",
+        "Security", "Testing", "CI/CD", "Documentation", "Build System", "Deployment",
+        "Configuration", "Networking", "Accessibility", "Developer Tooling"];
     await delay();
     return categories;
 }

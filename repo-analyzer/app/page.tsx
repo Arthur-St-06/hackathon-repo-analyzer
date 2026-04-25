@@ -14,14 +14,17 @@ export default function Home() {
   let repoUrl = "https://github.com/pytorch/pytorch";
   const instructionsRef = useRef<HTMLTextAreaElement | null>(null);
   const [instructionsText, setInstructionsText] = useState("");
+  const [instructionSubmitted, setInstructionSubmitted] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loadingIssues, setLoadingIssues] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
+
+  let instructionCharacterLimit = 300;
 
   function resizeInstructionsField(textarea: HTMLTextAreaElement) {
     textarea.style.height = "auto";
@@ -31,6 +34,13 @@ export default function Home() {
   // Check if the instructions box needs to be resized
   function handleInstructionsInput(event: FormEvent<HTMLTextAreaElement>) {
     resizeInstructionsField(event.currentTarget);
+  }
+
+  // Send the instruction
+  async function handleSendInstructions(prompt: string) {
+    await sendInstructions(prompt);
+    setInstructionSubmitted(true);
+    setSelectedCategory(null);
   }
 
   useEffect(() => {
@@ -43,6 +53,11 @@ export default function Home() {
     let mounted = true;
 
     async function loadCategoriesData() {
+      if (!instructionSubmitted || repoUrl === "") {
+        setLoadingCategories(false);
+        return;
+      }
+
       setLoadingCategories(true);
       const loadedCategories = await getCategories();
       if (mounted) {
@@ -56,7 +71,7 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [instructionSubmitted, repoUrl]);
 
   useEffect(() => {
     let mounted = true;
@@ -110,6 +125,7 @@ export default function Home() {
     };
   }, [selectedIssue]);
 
+
   return (
     <main className="flex min-h-screen items-top justify-center bg-zinc-100 px-6 py-8">
       <div className="flex w-full max-w-3xl flex-col items-center text-center">
@@ -130,26 +146,46 @@ export default function Home() {
           Instructions
         </label>
         <p className="mb-4 text-zinc-500">Any specific information for your case?</p>
-        <textarea
-          ref={instructionsRef}
-          id="Instructions"
-          placeholder="Enter instructions..."
-          maxLength={300}
-          rows={1}
-          value={instructionsText}
-          onChange={(event) => setInstructionsText(event.target.value)}
-          onInput={handleInstructionsInput}
-          className="w-full max-w-xl resize-none overflow-hidden rounded-3xl border border-zinc-300 bg-white px-7 py-4 text-2xl text-zinc-900 shadow-sm outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300"
-        />
-        {instructionsText === "" ? (<></>) : (
-          <button
-            type="button"
-            onClick={() => sendInstructions(instructionsText)}
-            className="mt-4 rounded-full border border-zinc-300 bg-white px-6 py-4 text-xl font-medium text-zinc-800 transition hover:bg-zinc-200"
-          >
-            Send instructions
-          </button>
-        )}
+        <div className="relative w-full max-w-xl">
+          <textarea
+            ref={instructionsRef}
+            id="Instructions"
+            placeholder="Enter instructions..."
+            maxLength={instructionCharacterLimit}
+            rows={1}
+            value={instructionsText}
+            readOnly={instructionSubmitted}
+            onChange={(event) => setInstructionsText(event.target.value)}
+            onInput={handleInstructionsInput}
+            className={`w-full resize-none overflow-hidden rounded-3xl border px-7 py-4 pb-10 text-2xl shadow-sm outline-none transition focus:ring-2 focus:ring-zinc-300 ${instructionSubmitted
+              ? "border-zinc-200 bg-zinc-200/70 text-zinc-500 focus:border-zinc-300"
+              : "border-zinc-300 bg-white text-zinc-900 focus:border-zinc-500"
+              }`}
+          />
+          {instructionSubmitted ? (<></>) : (
+            <div className="pointer-events-none absolute bottom-3 right-5 text-sm text-zinc-500">
+              {instructionsText.length} / {instructionCharacterLimit}
+            </div>)}
+        </div>
+        {
+          instructionSubmitted ? (
+            <><button
+              type="button"
+              onClick={() => setInstructionSubmitted(false)}
+              className="mt-4 rounded-full border border-zinc-300 bg-white px-6 py-4 text-xl font-medium text-zinc-800 transition hover:bg-zinc-200"
+            >
+              {instructionsText === "" ? "Add instructions" : "Edit instructions"}
+            </button></>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSendInstructions(instructionsText)}
+              className="mt-4 rounded-full border border-zinc-300 bg-white px-6 py-4 text-xl font-medium text-zinc-800 transition hover:bg-zinc-200"
+            >
+              {instructionsText === "" ? "Continue without instructions" : "Send Instructions"}
+            </button>
+          )
+        }
         <p className="mt-16 mb-0 text-6xl font-semibold text-zinc-700">Category</p>
         {selectedCategory ? (
           <div className="mt-6 flex w-full max-w-2xl items-center justify-center gap-4">
@@ -166,11 +202,11 @@ export default function Home() {
           </div>
         ) : loadingCategories ? (
           <p className="mt-6 text-xl text-zinc-500">Finding categories...</p>
-        ) : (
+        ) : repoUrl != "" && instructionSubmitted ? (
           <div className="mt-6 w-full max-w-2xl text-left">
             <p className="text-zinc-500">Select a category</p>
             <div className="mt-2 h-64 w-full max-w-2xl overflow-y-auto pr-1 text-left">
-              {repoUrl != "" ? (
+              {
                 categories.map((category) => (
                   <button
                     key={category}
@@ -182,10 +218,10 @@ export default function Home() {
                     {category}
                   </button>
                 ))
-              ) : (
-                <p className="text-xl text-zinc-500">Enter a URL to see categories.</p>
-              )}
+              }
             </div></div>
+        ) : (
+          <p className="mt-6 text-xl text-zinc-500">Complete the above fields to see categories.</p>
         )}
         <p className="mt-16 mb-0 text-6xl font-semibold text-zinc-700">Issues</p>
         {selectedIssue ? (
