@@ -1,6 +1,6 @@
 // DEBUG: temporary to simulate the time of an AI
 function delay() {
-    return new Promise((resolve) => setTimeout(resolve, 2000));
+    return new Promise((resolve) => setTimeout(resolve, 3000));
 }
 
 // Tailor the AI agent's selections
