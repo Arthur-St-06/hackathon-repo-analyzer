@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "generated_at": "2026-04-25T23:43:23Z",
+    "group": "CUDA and Distributed",
+    "selected_topics": [
+      "module: c10d",
+      "module: cuda",
+      "module: ddp",
+      "module: flaky-tests",
+      "module: linear algebra",
+      "module: rocm"
+    ],
+    "corpus_version": "full_v1"
+  },
+  "findings": [
+    {
+      "finding_id": "pytorch_173638",
+      "repo": "pytorch/pytorch",
+      "issue_number": 173638,
+      "issue_title": "`torch.linalg.slogdet` does not propagate `NaN` in CUDA",
+      "issue_url": "https://github.com/pytorch/pytorch/issues/173638",
+      "issue_state": "OPEN",
+      "issue_created_at": "2026-01-28T12:24:36Z",
+      "issue_labels": [
+        "module: cuda",
+        "triaged",
+        "module: NaNs and Infs",
+        "module: linear algebra",
+        "module: correctness (silent)"
+      ],
+      "body_preview": "",
+      "initial_classification": "correctness_silent",
+      "surface_reasoning": "Score 1.170. Auto-selected from ranked corpus.",
+      "stage": "validated",
+      "linked_prs": [],
+      "maintainer_signals": [
+        {
+          "author": "nikitaved",
+          "role": "COLLABORATOR",
+          "signal_type": "scoped_bug",
+          "quote": "Seems like we have an issue with either cuSOLVER or the way we dispatch to it"
+        },
+        {
+          "author": "lakshayg",
+          "role": "COLLABORATOR",
+          "signal_type": "scoped_bug",
+          "quote": "if there are \"not too many\" nans in the input, the LU factorization does not contain any nans"
+        },
+        {
+          "author": "lakshayg",
+          "role": "COLLABORATOR",
+          "signal_type": "scoped_bug",
+          "quote": "I have filed a bug internally with the cuSOLVER team"
+        },
+        {
+          "author": "nikitaved",
+          "role": "COLLABORATOR",
+          "signal_type": "scoped_bug",
+          "quote": "it will manifest in all the ops that use LU"
+        }
+      ],
+      "blocking_signals": [],
+      "fix_scope": "unknown",
+      "affected_hardware": [
+        "cuda"
+      ],
+      "still_reproducible": "likely",
+      "confidence": 1.0,
+      "confidence_justification": "Base: 0.50. correctness (silent) label \u2192 +0.25, total 0.75. repro script present \u2192 +0.15, total 0.90. triaged label \u2192 +0.10, total 1.00. Final: 1.0",
+      "recommended_action": "file_pr",
+      "closest_ground_truth": null,
+      "ground_truth_delta": null,
+      "selected_topics": [
+        "module: flaky-tests",
+        "module: cuda",
+        "module: c10d",
+        "module: rocm",
+        "module: linear algebra",
+        "module: ddp"
+      ],
+      "corpus_version": "full_v1",
+      "created_at": "2026-04-25T23:26:51Z",
+      "updated_at": "2026-04-25T23:27:28Z"
+    }
+  ]
+}

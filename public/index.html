@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Issue Researcher</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #1f2328;
+      background: #f6f8fa;
+    }
+
+    a { color: #0969da; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+      font-size: 85%;
+      background: #eaeef2;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: white;
+      border-bottom: 1px solid #d0d7de;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 { font-size: 16px; font-weight: 600; }
+    #header-meta { font-size: 13px; color: #57606a; }
+
+    /* ── Layouts ── */
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .split {
+      display: flex;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    /* ── Step card (initial + group-selected states) ── */
+    .step-card {
+      background: white;
+      border: 1px solid #d0d7de;
+      border-radius: 10px;
+      padding: 40px 40px 36px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #0969da;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .step-card h2 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+    .step-card p  { font-size: 13px; color: #57606a; line-height: 1.55; margin-bottom: 18px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid;
+      transition: background 120ms, border-color 120ms;
+    }
+    .btn-primary {
+      background: #0969da;
+      border-color: #0969da;
+      color: white;
+    }
+    .btn-primary:hover { background: #0757ba; border-color: #0757ba; }
+    .btn-primary:disabled { background: #8c959f; border-color: #8c959f; cursor: default; }
+
+    .btn-secondary {
+      background: white;
+      border-color: #d0d7de;
+      color: #1f2328;
+    }
+    .btn-secondary:hover { background: #f3f4f6; }
+
+    .step-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .step-error { margin-top: 10px; font-size: 12px; color: #a10000; }
+
+    /* ── Sidebar ── */
+    aside {
+      width: 252px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 57px;
+      max-height: calc(100vh - 77px);
+      overflow-y: auto;
+    }
+    aside h2 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #57606a;
+      margin-bottom: 8px;
+      padding-left: 2px;
+    }
+    .group-list {
+      background: white;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .group-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid #d0d7de;
+      cursor: pointer;
+      transition: background 120ms;
+      border-left: 3px solid transparent;
+    }
+    .group-item:last-child { border-bottom: none; }
+    .group-item:hover { background: #f6f8fa; }
+    .group-item.selected {
+      background: #ddf4ff;
+      border-left-color: #0969da;
+      padding-left: 11px;
+    }
+    .group-name {
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .findings-badge {
+      background: #0969da;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .group-sub {
+      font-size: 11px;
+      color: #57606a;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .act-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .act-high   { background: #1a7f37; }
+    .act-medium { background: #9a6700; }
+    .act-low    { background: #57606a; }
+
+    /* ── Main panel ── */
+    .main { flex: 1; min-width: 0; }
+    .panel-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+    .panel-title  { font-size: 15px; font-weight: 600; }
+    .panel-sub    { font-size: 13px; color: #57606a; }
+
+    /* ── Issue cards ── */
+    .issue-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .issue-card {
+      background: white;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 150ms;
+    }
+    .issue-card.expanded { border-color: #0969da; }
+
+    .card-header {
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: background 120ms;
+    }
+    .card-header:hover { background: #f6f8fa; }
+    .issue-card.expanded .card-header { background: #f6f8fa; }
+
+    .toggle-icon {
+      color: #57606a;
+      font-size: 11px;
+      flex-shrink: 0;
+      margin-top: 4px;
+      transition: transform 220ms ease;
+      user-select: none;
+    }
+    .issue-card.expanded .toggle-icon { transform: rotate(90deg); }
+
+    .card-body { flex: 1; min-width: 0; }
+    .issue-num  { font-size: 11px; color: #57606a; font-family: ui-monospace, monospace; }
+    .issue-title { font-size: 14px; font-weight: 600; margin: 3px 0 8px; line-height: 1.4; }
+    .issue-title a { color: #1f2328; }
+    .issue-title a:hover { color: #0969da; text-decoration: none; }
+
+    .card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+
+    .conf-badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 12px; color: white; flex-shrink: 0; }
+    .conf-hi  { background: #1a7f37; }
+    .conf-med { background: #9a6700; }
+    .conf-lo  { background: #57606a; }
+
+    .class-pill { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 12px; border: 1px solid; flex-shrink: 0; }
+    .cls-correctness_silent     { background: #fff0f0; border-color: #ffb8b8; color: #a10000; }
+    .cls-performance_regression { background: #fff8f0; border-color: #ffd9b3; color: #a05000; }
+    .cls-missing_fast_path      { background: #f0f4ff; border-color: #c8d8ff; color: #0044aa; }
+    .cls-unknown,.cls-ci_noise,.cls-maintainer_task { background: #f6f8fa; border-color: #d0d7de; color: #57606a; }
+
+    .lbl { font-size: 11px; padding: 2px 6px; border-radius: 10px; border: 1px solid; }
+    .lbl-module  { background: #f0f4ff; border-color: #c8d8ff66; color: #3730a3; }
+    .lbl-special { background: #e6ffec; border-color: #4ac26b40; color: #116329; }
+    .lbl-default { background: #f6f8fa; border-color: #d0d7de; color: #57606a; }
+
+    .issue-age { font-size: 11px; color: #8c959f; margin-left: auto; flex-shrink: 0; padding-left: 4px; }
+
+    /* ── Expand animation ── */
+    .card-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 280ms ease; }
+    .issue-card.expanded .card-detail { grid-template-rows: 1fr; }
+    .card-detail > div { overflow: hidden; }
+
+    /* ── Detail inner ── */
+    .detail-inner { padding: 16px; border-top: 1px solid #eaeef2; display: flex; flex-direction: column; gap: 14px; }
+    .det-section h4 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #8c959f; margin-bottom: 7px; }
+
+    .justification { font-size: 13px; line-height: 1.6; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 10px 12px; white-space: pre-wrap; }
+    .action-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .action-badge { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px; border: 1px solid; }
+    .act-file_pr            { background: #e6ffec; border-color: #4ac26b60; color: #116329; }
+    .act-file_issue         { background: #ddf4ff; border-color: #54aeff60; color: #0550ae; }
+    .act-revive_abandoned_pr{ background: #fff8f0; border-color: #ffd9b360; color: #a05000; }
+    .act-needs_human_review { background: #f6f8fa; border-color: #d0d7de; color: #57606a; }
+    .act-reject             { background: #fff0f0; border-color: #ffb8b8; color: #a10000; }
+
+    .meta-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .meta-chip { font-size: 12px; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 3px 8px; color: #1f2328; }
+    .meta-chip em { color: #57606a; font-style: normal; font-size: 11px; margin-right: 3px; }
+
+    .surface-reasoning { font-size: 13px; color: #57606a; font-style: italic; line-height: 1.55; }
+
+    .signal-list, .pr-list, .blocker-list { display: flex; flex-direction: column; gap: 6px; }
+    .signal-item { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 9px 11px; }
+    .signal-head { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+    .sig-author { font-size: 12px; font-weight: 600; }
+    .sig-role   { font-size: 10px; background: #eaeef2; color: #57606a; padding: 1px 5px; border-radius: 4px; }
+    .sig-type   { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: auto; }
+    .sigt-approved_fix,.sigt-requested_merge { background: #e6ffec; color: #116329; }
+    .sigt-wont_fix,.sigt-blocked_action      { background: #fff0f0; color: #a10000; }
+    .sigt-by_design                          { background: #fff8f0; color: #a05000; }
+    .sigt-needs_more_info                    { background: #f6f8fa; color: #57606a; border: 1px solid #d0d7de; }
+    .sigt-scoped_bug                         { background: #ddf4ff; color: #0550ae; }
+    .sigt-partial_fix                        { background: #fffbe6; color: #7d4e00; }
+    .sig-quote { font-size: 12px; color: #57606a; font-style: italic; border-left: 3px solid #d0d7de; padding-left: 8px; }
+
+    .pr-item { display: flex; align-items: flex-start; gap: 9px; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 9px 11px; }
+    .pr-state { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; margin-top: 1px; }
+    .prs-merged { background: #f0e6ff; color: #6e40c9; }
+    .prs-open   { background: #e6ffec; color: #116329; }
+    .prs-closed { background: #fff0f0; color: #a10000; }
+    .pr-title { font-size: 13px; font-weight: 500; }
+    .pr-meta  { font-size: 11px; color: #57606a; margin-top: 2px; }
+
+    .blocker-item { font-size: 12px; color: #a10000; background: #fff0f0; border: 1px solid #ffb8b8; border-radius: 6px; padding: 6px 10px; }
+    .none-text { font-size: 12px; color: #8c959f; font-style: italic; }
+
+    /* ── Pipeline progress ── */
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .progress-wrap { background: #eaeef2; border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 14px; }
+    .progress-bar  {
+      height: 100%; border-radius: 6px; min-width: 3px;
+      background: linear-gradient(90deg, #0969da 40%, #79b8ff 50%, #0969da 60%);
+      background-size: 300% 100%;
+      animation: shimmer 2s linear infinite;
+      transition: width 600ms ease;
+    }
+    .progress-msg { font-size: 13px; font-weight: 500; color: #1f2328; margin-bottom: 14px; }
+    .run-log {
+      max-height: 200px; overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+      font-size: 11px; line-height: 1.6; color: #57606a;
+      background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 8px 10px;
+    }
+    .run-log div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .log-ok   { color: #1a7f37; font-weight: 600; }
+    .log-warn { color: #9a6700; }
+    .log-err  { color: #a10000; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d0d7de; border-radius: 3px; }
+
+    @media (max-width: 780px) {
+      .split { flex-direction: column; padding: 12px; }
+      aside { width: 100%; position: static; max-height: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Issue Researcher</h1>
+  <span id="header-meta"></span>
+</header>
+
+<div id="root"></div>
+
+<script>
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function slugClass(s) { return String(s||'').replace(/[^a-z0-9_]/gi,'_'); }
+function timeAgo(iso) {
+  if (!iso) return '';
+  const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
+  if (d < 1) return 'today';
+  if (d < 30) return d + 'd ago';
+  if (d < 365) return Math.floor(d/30) + 'mo ago';
+  return Math.floor(d/365) + 'y ago';
+}
+function confClass(c) {
+  if (c >= 0.90) return 'conf-hi';
+  if (c >= 0.75) return 'conf-med';
+  return 'conf-lo';
+}
+function renderCode(text) {
+  return esc(text).replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+function labelClass(l) {
+  if (['triaged','help wanted','good first issue','actionable','high priority'].includes(l)) return 'lbl lbl-special';
+  if (l.startsWith('module:')) return 'lbl lbl-module';
+  return 'lbl lbl-default';
+}
+const ACTION_LABELS = {
+  file_pr: 'Open a PR', file_issue: 'File an issue',
+  revive_abandoned_pr: 'Revive abandoned PR',
+  needs_human_review: 'Needs human review', reject: 'Reject',
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+const S = {
+  phase: 'initial',
+  groups: [],
+  loadedFindings: {},   // {group_id: findings[]} — in-session per-group cache
+  findingsIndex:  {},   // {group_id: {count, generated_at}} — from server index
+  selectedId: null,
+  expandedNum: null,
+  loadingTopics: false,
+  topicsError: '',
+  running:  false,
+  runPct:   0,
+  runMsg:   '',
+  runLog:   [],
+  runError: '',
+};
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+
+async function loadTopics() {
+  S.loadingTopics = true;
+  S.topicsError   = '';
+  render();
+  try {
+    const data = await fetch('./data/topic_groups.json').then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status} — run 01_discover_topics.sh first`);
+      return r.json();
+    });
+    S.groups        = data.groups || [];
+    S.phase         = 'topics';
+    S.loadingTopics = false;
+    // Populate findings index so badges appear immediately on load
+    try {
+      const idx = await fetch('./data/findings_index.json').then(r => r.ok ? r.json() : {});
+      S.findingsIndex = idx || {};
+    } catch(_) {}
+    render();
+  } catch (e) {
+    S.loadingTopics = false;
+    S.topicsError   = e.message;
+    render();
+  }
+}
+
+// Load (or reload) findings for a specific group from the per-group file.
+// S.running stays true until this resolves (when called from runPipeline).
+async function loadResults(groupId) {
+  try {
+    const data = await fetch(`./data/findings_${groupId}.json`).then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    });
+    const findings = (data.findings || []).sort((a,b) => (b.confidence||0)-(a.confidence||0));
+    S.loadedFindings[groupId] = findings;
+    S.findingsIndex[groupId]  = {
+      count:        findings.length,
+      generated_at: data.metadata?.generated_at || '',
+    };
+    S.phase   = 'topics';
+    S.running = false;
+
+    const updated = data.metadata?.generated_at ? 'Last run ' + timeAgo(data.metadata.generated_at) : '';
+    document.getElementById('header-meta').textContent = updated;
+    render();
+  } catch (e) {
+    S.running  = false;
+    S.runError = e.message;
+    render();
+  }
+}
+
+// View previously-run results without re-running the pipeline.
+async function loadResultsFor(groupId) {
+  S.selectedId  = groupId;
+  S.expandedNum = null;
+  await loadResults(groupId);
+}
+
+async function runPipeline(groupId) {
+  S.running  = true;
+  S.runPct   = 0;
+  S.runMsg   = 'Starting…';
+  S.runLog   = [];
+  S.runError = '';
+  render();
+
+  try {
+    const resp = await fetch(`/api/run/${encodeURIComponent(groupId)}`, { method: 'POST' });
+    if (!resp.ok) {
+      const j = await resp.json().catch(() => ({}));
+      throw new Error(j.error || `Server error ${resp.status}`);
+    }
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', finished = false;
+
+    while (!finished) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for (const part of parts) {
+        if (!part.trim()) continue;
+        let evtName = 'message', evtData = '';
+        for (const line of part.split('\n')) {
+          if (line.startsWith('event: ')) evtName = line.slice(7).trim();
+          if (line.startsWith('data: '))  evtData = line.slice(6);
+        }
+        if (!evtData) continue;
+        const d = JSON.parse(evtData);
+        if (evtName === 'progress') {
+          if (d.pct != null) S.runPct = d.pct;
+          if (d.msg)         S.runMsg = d.msg;
+          if (d.log)         S.runLog.push(d.log);
+          render();
+        } else if (evtName === 'done') {
+          S.runPct = 100;
+          S.runMsg = 'Loading results…';
+          render();
+          finished = true;
+          break;
+        } else if (evtName === 'error') {
+          throw new Error(d.msg);
+        }
+      }
+    }
+
+    await loadResults(groupId);  // atomically sets S.running = false and stores findings
+  } catch (e) {
+    S.running  = false;
+    S.runError = e.message;
+    render();
+  }
+}
+
+function selectGroup(id) {
+  S.selectedId  = id;
+  S.expandedNum = null;
+  S.runError    = '';
+  render();
+}
+
+function toggleCard(num) {
+  S.expandedNum = S.expandedNum === num ? null : num;
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+
+function render() {
+  const root = document.getElementById('root');
+  if (S.phase === 'initial') {
+    root.innerHTML = renderInitial();
+  } else {
+    root.innerHTML = renderSplit();
+  }
+  const log = document.getElementById('run-log');
+  if (log) log.scrollTop = log.scrollHeight;
+}
+
+// Step 1: discover topics
+function renderInitial() {
+  return `<div class="page">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h2>Discover Topic Groups</h2>
+      <p>Cluster repository issues by label co-occurrence into named topic areas. Run the discovery script in your terminal, then load the results here.</p>
+      <div class="step-actions">
+        <button class="btn btn-primary" onclick="loadTopics()" ${S.loadingTopics ? 'disabled' : ''}>
+          ${S.loadingTopics ? 'Loading…' : 'Load Topics →'}
+        </button>
+      </div>
+      ${S.topicsError ? `<div class="step-error">⚠ ${esc(S.topicsError)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+// Two-column layout: sidebar + main
+function renderSplit() {
+  return `<div class="split">
+    <aside>
+      <h2>Topic Groups</h2>
+      <div class="group-list">${renderSidebar()}</div>
+    </aside>
+    <div class="main">
+      ${renderMain()}
+    </div>
+  </div>`;
+}
+
+function renderSidebar() {
+  return S.groups
+    .filter(g => g.group_id !== 'other')
+    .map(g => {
+      const isSelected = g.group_id === S.selectedId;
+      const loaded     = S.loadedFindings[g.group_id];
+      const indexed    = S.findingsIndex[g.group_id];
+      const count      = loaded ? loaded.length : indexed?.count;
+      const badge      = count != null
+        ? `<span class="findings-badge">${count}</span>`
+        : '';
+      return `<div class="group-item${isSelected ? ' selected' : ''}"
+                   onclick="selectGroup('${esc(g.group_id)}')"
+                   title="${esc(g.description||'')}">
+        <div class="group-name"><span>${esc(g.display_name)}</span>${badge}</div>
+        <div class="group-sub">
+          ${g.total_open_issues.toLocaleString()} open
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function renderMain() {
+  // No group selected yet
+  if (!S.selectedId) {
+    return `<div class="panel-header">
+        <span class="panel-title">Select a topic group</span>
+      </div>
+      <div style="background:white;border:1px solid #d0d7de;border-radius:8px;padding:32px;text-align:center;color:#57606a;">
+        Choose a group from the sidebar to continue.
+      </div>`;
+  }
+
+  const group     = S.groups.find(g => g.group_id === S.selectedId);
+  const groupName = group?.display_name || S.selectedId;
+  const findings  = S.loadedFindings[S.selectedId];
+  const indexed   = S.findingsIndex[S.selectedId];
+
+  // Pipeline is running for this group
+  if (S.running) {
+    const logLines = S.runLog.slice(-60).map(l => {
+      const c = /VALIDATED:/.test(l) ? 'log-ok' : /SKIP:|PRECHECK_REJECT/.test(l) ? 'log-warn' : /error/i.test(l) ? 'log-err' : '';
+      return `<div class="${c}">${esc(l)}</div>`;
+    }).join('');
+    return `<div class="panel-header">
+        <span class="panel-title">${esc(groupName)}</span>
+        <span class="panel-sub">Running…</span>
+      </div>
+      <div class="step-card" style="max-width:100%;margin:0;">
+        <div class="step-num">2</div>
+        <h2>Analyzing ${esc(groupName)}…</h2>
+        <div class="progress-wrap"><div class="progress-bar" style="width:${S.runPct}%"></div></div>
+        <div class="progress-msg">${esc(S.runMsg)}</div>
+        <div class="run-log" id="run-log">${logLines}</div>
+      </div>`;
+  }
+
+  // Findings loaded in memory for this group → show them
+  if (findings) {
+    return `<div class="panel-header">
+        <span class="panel-title">${esc(groupName)}</span>
+        <span class="panel-sub">${findings.length} validated findings · sorted by confidence</span>
+        <button class="btn btn-secondary" style="margin-left:auto;font-size:12px;padding:5px 11px;"
+                onclick="runPipeline('${esc(S.selectedId)}')">Re-run</button>
+      </div>
+      <div class="issue-list">
+        ${findings.map(f => renderCard(f)).join('')}
+      </div>`;
+  }
+
+  // Findings exist on server (from a previous session) but not loaded yet
+  if (indexed) {
+    return `<div class="panel-header">
+        <span class="panel-title">${esc(groupName)}</span>
+        ${group ? `<span style="font-size:13px;color:#57606a;">${group.total_open_issues.toLocaleString()} open issues</span>` : ''}
+      </div>
+      <div class="step-card" style="max-width:100%;margin:0;">
+        <div class="step-num">2</div>
+        <h2>Previous results available</h2>
+        <p><strong>${indexed.count}</strong> validated finding(s) from ${timeAgo(indexed.generated_at)}.</p>
+        <div class="step-actions">
+          <button class="btn btn-primary" onclick="loadResultsFor('${esc(S.selectedId)}')">
+            View Results →
+          </button>
+          <button class="btn btn-secondary" onclick="runPipeline('${esc(S.selectedId)}')">
+            Re-run Analysis
+          </button>
+        </div>
+        ${S.runError ? `<div class="step-error">⚠ ${esc(S.runError)}</div>` : ''}
+      </div>`;
+  }
+
+  // Not yet analyzed
+  return `<div class="panel-header">
+      <span class="panel-title">${esc(groupName)}</span>
+      ${group ? `<span style="font-size:13px;color:#57606a;">${group.total_open_issues.toLocaleString()} open issues</span>` : ''}
+    </div>
+    <div class="step-card" style="max-width:100%;margin:0;">
+      <div class="step-num">2</div>
+      <h2>Run the Analysis Pipeline</h2>
+      <p>Surface and validate the best candidate issues for <strong>${esc(groupName)}</strong>.</p>
+      <div class="step-actions">
+        <button class="btn btn-primary" onclick="runPipeline('${esc(S.selectedId)}')">
+          Run Analysis →
+        </button>
+      </div>
+      ${S.runError ? `<div class="step-error">⚠ ${esc(S.runError)}</div>` : ''}
+    </div>`;
+}
+
+// ── Issue card ────────────────────────────────────────────────────────────────
+
+function renderCard(f) {
+  const expanded = f.issue_number === S.expandedNum;
+  const conf     = f.confidence ?? 0;
+  const cls      = f.initial_classification || 'unknown';
+
+  const labels = (f.issue_labels || []).slice(0, 6)
+    .map(l => `<span class="${labelClass(l)}">${esc(l)}</span>`).join('');
+
+  return `<div class="issue-card${expanded ? ' expanded' : ''}">
+  <div class="card-header" onclick="toggleCard(${f.issue_number})">
+    <span class="toggle-icon">▶</span>
+    <div class="card-body">
+      <div class="issue-num">#${f.issue_number}</div>
+      <div class="issue-title">
+        <a href="${esc(f.issue_url)}" target="_blank" rel="noopener"
+           onclick="event.stopPropagation()">${esc(f.issue_title)}</a>
+      </div>
+      <div class="card-meta">
+        <span class="conf-badge ${confClass(conf)}">${conf.toFixed(2)}</span>
+        ${cls !== 'unknown' ? `<span class="class-pill cls-${slugClass(cls)}">${esc(cls.replace(/_/g,' '))}</span>` : ''}
+        ${labels}
+        <span class="issue-age">opened ${timeAgo(f.issue_created_at)}</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-detail"><div>${renderDetail(f)}</div></div>
+</div>`;
+}
+
+function renderDetail(f) {
+  const justHtml = f.confidence_justification
+    ? `<div class="justification">${renderCode(f.confidence_justification)}</div>`
+    : '<span class="none-text">Not recorded.</span>';
+
+  const action = f.recommended_action;
+  const actionHtml = action
+    ? `<span class="action-badge act-${slugClass(action)}">${esc(ACTION_LABELS[action]||action)}</span>`
+    : '';
+
+  const hw = (f.affected_hardware||[]).map(h => `<span class="meta-chip"><em>hw</em>${esc(h)}</span>`).join('');
+  const chipsHtml = [
+    f.fix_scope          ? `<span class="meta-chip"><em>scope</em>${esc(f.fix_scope.replace(/_/g,' '))}</span>` : '',
+    hw,
+    f.still_reproducible ? `<span class="meta-chip"><em>repro</em>${esc(f.still_reproducible)}</span>` : '',
+  ].join('');
+
+  const blockers = f.blocking_signals || [];
+  const blockersHtml = blockers.length
+    ? blockers.map(b => `<div class="blocker-item">⚠ ${esc(b)}</div>`).join('')
+    : '<span class="none-text">None</span>';
+
+  const sigs = f.maintainer_signals || [];
+  const sigsHtml = sigs.length
+    ? sigs.map(s => `<div class="signal-item">
+        <div class="signal-head">
+          <span class="sig-author"><a href="https://github.com/${esc(s.author)}" target="_blank" rel="noopener">@${esc(s.author)}</a></span>
+          <span class="sig-role">${esc(s.role)}</span>
+          <span class="sig-type sigt-${slugClass(s.signal_type)}">${esc(s.signal_type.replace(/_/g,' '))}</span>
+        </div>
+        ${s.quote ? `<div class="sig-quote">${esc(s.quote)}</div>` : ''}
+      </div>`).join('')
+    : '<span class="none-text">None</span>';
+
+  const prs = f.linked_prs || [];
+  const prsHtml = prs.length
+    ? prs.map(pr => {
+        const sc    = pr.merged ? 'prs-merged' : pr.state==='open' ? 'prs-open' : 'prs-closed';
+        const label = pr.merged ? 'merged' : pr.state;
+        const when  = pr.merged && pr.merged_at ? ` · merged ${timeAgo(pr.merged_at)}` : '';
+        return `<div class="pr-item">
+          <span class="pr-state ${sc}">${esc(label)}</span>
+          <div>
+            <div class="pr-title"><a href="${esc(pr.url)}" target="_blank" rel="noopener">#${pr.number} ${esc(pr.title)}</a></div>
+            <div class="pr-meta">${esc(pr.reviews_summary||'')}${when}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<span class="none-text">None</span>';
+
+  return `<div class="detail-inner">
+  <div class="det-section"><h4>Confidence scoring</h4>${justHtml}</div>
+  <div class="det-section">
+    <h4>Recommended action</h4>
+    <div class="action-row">${actionHtml}<div class="meta-chips">${chipsHtml}</div></div>
+  </div>
+  ${f.surface_reasoning ? `<div class="det-section"><h4>Triage note</h4><div class="surface-reasoning">${esc(f.surface_reasoning)}</div></div>` : ''}
+  <div class="det-section"><h4>Blocking signals</h4><div class="blocker-list">${blockersHtml}</div></div>
+  <div class="det-section"><h4>Maintainer signals</h4><div class="signal-list">${sigsHtml}</div></div>
+  <div class="det-section"><h4>Linked PRs</h4><div class="pr-list">${prsHtml}</div></div>
+</div>`;
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+
+render();
+</script>
+</body>
+</html>

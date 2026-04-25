@@ -1,16 +1,15 @@
 {
-  "total_issues_analyzed": 1120,
-  "total_findings": 55,
-  "actionable": 21,
-  "needs_review": 25,
-  "rejected": 9,
-  "abandoned_approved_prs": 12,
+  "group": "CPU Performance",
+  "selected_topics": [
+    "module: cpu",
+    "module: multithreading",
+    "module: performance"
+  ],
+  "corpus_version": "full_v1",
+  "total_raw_findings": 2,
+  "total_validated": 1,
   "by_classification": {
-    "correctness_silent": 32,
-    "performance_regression": 12,
-    "missing_fast_path": 9
+    "unknown": 1
   },
-  "top_finding": "pytorch_71774",
-  "repo": "pytorch/pytorch",
-  "last_updated": "2026-04-24T19:18:53Z"
+  "last_updated": "2026-04-25T23:44:30Z"
 }

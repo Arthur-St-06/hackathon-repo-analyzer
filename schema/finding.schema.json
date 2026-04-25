@@ -304,6 +304,29 @@
       "description": "LAYER 3 · VALIDATOR AGENT. Concise description of how this finding differs from the closest ground truth case. Highlights the factors that make this finding more or less actionable than the reference."
     },
 
+    "selected_topics": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Array of topic label strings the user selected when this finding was generated, e.g. [\"module: cuda\", \"module: linear algebra\"]. Null for findings produced before the topics system was introduced."
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 1 · SURFACE AGENT (optional). The topic labels the user selected for this pipeline run. Copied from data/selected_topics.json. Null for pre-topics-system findings."
+    },
+
+    "corpus_version": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["filtered_v1", "full_v1"]
+        },
+        {"type": "null"}
+      ],
+      "description": "LAYER 1 · SURFACE AGENT (optional). Which corpus version was used when this finding was generated. filtered_v1: original 1120-issue domain-filtered corpus; full_v1: 4870-issue full corpus (corpus_full.json). Null for pre-topics-system findings."
+    },
+
     "stage": {
       "type": "string",
       "enum": ["raw", "enriched", "validated", "needs_review", "rejected"],
