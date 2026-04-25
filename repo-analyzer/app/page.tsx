@@ -141,7 +141,15 @@ export default function Home() {
           onInput={handleInstructionsInput}
           className="w-full max-w-xl resize-none overflow-hidden rounded-3xl border border-zinc-300 bg-white px-7 py-4 text-2xl text-zinc-900 shadow-sm outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300"
         />
-        {instructionsText === "" ? (<></>) : (
+        {instructionsText === "" ? (
+          <button
+            type="button"
+            onClick={() => sendInstructions("")}
+            className="mt-4 rounded-full border border-zinc-300 bg-white px-6 py-4 text-xl font-medium text-zinc-800 transition hover:bg-zinc-200"
+          >
+            Continue without instructions
+          </button>
+        ) : (
           <button
             type="button"
             onClick={() => sendInstructions(instructionsText)}
@@ -183,7 +191,7 @@ export default function Home() {
                   </button>
                 ))
               ) : (
-                <p className="text-xl text-zinc-500">Enter a URL to see categories.</p>
+                <p className="text-xl text-zinc-500">Complete the above fields to see categories.</p>
               )}
             </div></div>
         )}
