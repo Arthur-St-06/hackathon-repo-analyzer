@@ -3,6 +3,12 @@ function delay() {
     return new Promise((resolve) => setTimeout(resolve, 2000));
 }
 
+// Tailor the AI agent's selections
+export async function sendInstructions(prompt) {
+    // Placeholder for an API call
+    console.log("tailoring output: " + prompt);
+}
+
 // Return the issue categories, given the URL
 export async function getCategories(url) {
     // Placeholder for an API call
