@@ -17,7 +17,10 @@
   "surface_reasoning": "Priority 1: labeled `module: correctness (silent)` + `module: cuda` + `module: fft`. Title reports iSTFT giving wrong results for some batched inputs — FFT correctness bug that is silent (no exception raised). Domain relevance: batched CUDA FFT correctness requires knowledge of cuFFT batch dimension handling and the CUDA iSTFT kernel implementation.",
   "linked_prs": [],
   "maintainer_signals": [],
-  "blocking_signals": [],
+  "blocking_signals": [
+    "sanity_check: high_confidence_without_maintainer_or_pr_evidence",
+    "sanity_check: very_high_confidence_with_cross_cutting_scope"
+  ],
   "fix_scope": "cross_cutting",
   "affected_hardware": [
     "cuda",
@@ -27,10 +30,10 @@
   "still_reproducible": "likely",
   "confidence": 1,
   "confidence_justification": "module: correctness (silent) label -> +0.25. Running total: 0.75.\nrepro script detected -> +0.15. Running total: 0.90.\ntriaged label -> +0.10. Running total: 1.00.\nFinal: 1.00.",
-  "recommended_action": "file_pr",
+  "recommended_action": "needs_human_review",
   "closest_ground_truth": "positive_71774",
   "ground_truth_delta": "This finding resembles an actionable bug profile with no hard blocker and contributor-path viability.",
-  "stage": "validated",
+  "stage": "needs_review",
   "created_at": "2026-04-24T10:00:00Z",
-  "updated_at": "2026-04-25T20:59:28.709Z"
+  "updated_at": "2026-04-25T22:54:11.995Z"
 }

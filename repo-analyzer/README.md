@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Repo Analyzer
 
-## Getting Started
+Deterministic surface + validator pipeline for PyTorch issue triage, with user-readable findings and summary views.
 
-First, run the development server:
+## Requirements
+
+- Node.js 20+
+- A GitHub token for higher API limits:
+	- `GITHUB_TOKEN` or `GH_TOKEN`
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create local environment file at `.env.local`:
+
+```bash
+GITHUB_TOKEN=your_token_here
+ENABLE_CLAUDE_CLI=true
+# Optional override. If omitted, app defaults to Haiku.
+CLAUDE_CLI_MODEL=haiku
+```
+
+3. Start development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Operator Workflow
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Run Surface analysis in the UI.
+2. Run Validator for a finding id.
+3. Review Findings (User View) cards.
+4. Review Findings Summary panel.
+5. Export markdown report from `/api/findings/report`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Main Endpoints
 
-## Learn More
+- `POST /api/surface/run`
+- `POST /api/validator/run`
+- `GET /api/findings/list?limit=30`
+- `GET /api/findings/summary`
+- `GET /api/findings/report`
 
-To learn more about Next.js, take a look at the following resources:
+## Hardening Included
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Validator output schema validation against `schema/finding.schema.json`
+- Confidence sanity checks that auto-route suspicious outputs to `needs_review`
+- User-readable presenter layer for findings cards
+- Deterministic summary aggregation and markdown export
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Findings are stored outside this app folder in workspace-level directories:
+	- `findings/raw`
+	- `findings/validated`
+	- `findings/needs_review`
+	- `findings/rejected`

@@ -1,0 +1,219 @@
+[
+  {
+    "number": 181488,
+    "title": "[TensorIterator] reorder_dimensions is sensitive to operand order for commutative ops",
+    "labels": [
+      "module: performance",
+      "triaged",
+      "enhancement",
+      "module: TensorIterator",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-25T11:49:28Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181488"
+  },
+  {
+    "number": 181473,
+    "title": "`torch.jit.ScriptModule.register_full_backward_hook` raises RuntimeError due to `_is_full_backward_hook` attribute type cast failure",
+    "labels": [
+      "oncall: jit",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-25T01:55:12Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181473"
+  },
+  {
+    "number": 181462,
+    "title": "torch.split raises IndexError incorrectly when called in FakeTensorMode and dim_size == 0 but split_size > 0",
+    "labels": [
+      "triaged",
+      "module: edge cases",
+      "oncall: pt2",
+      "module: fakeTensor",
+      "module: empty tensor",
+      "module: pt2-dispatcher",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-24T23:21:45Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181462"
+  },
+  {
+    "number": 181442,
+    "title": "torch.compile: mean/sum on non-contiguous tensor is much slower than eager",
+    "labels": [
+      "module: performance",
+      "triaged",
+      "enhancement",
+      "module: reductions",
+      "oncall: pt2",
+      "module: inductor",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-24T20:30:10Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181442"
+  },
+  {
+    "number": 181409,
+    "title": "[vllm] [2.12 regression] Qwen2-VL vision-tower-only LoRA generation diverges from golden output",
+    "labels": [
+      "triage review",
+      "module: regression",
+      "module: correctness (silent)",
+      "oncall: pt2",
+      "module: inductor",
+      "module: vllm",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-24T17:47:40Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181409"
+  },
+  {
+    "number": 181384,
+    "title": "[aot_autograd] RuntimeError: /pytorch/build/aten/src/ATen/RegisterZeroTensor_0.cpp:254: SymIntArrayRef expected to contain only concrete integers when using torch.compile(dynamic=True) with torch.func.grad over GroupNorm",
+    "labels": [
+      "triaged",
+      "module: norms and normalization",
+      "oncall: pt2",
+      "module: functorch",
+      "module: dynamic shapes",
+      "module: aotdispatch",
+      "module: pt2-dispatcher",
+      "dynamo-functorch",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-24T15:29:44Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181384"
+  },
+  {
+    "number": 181375,
+    "title": "2026.04.24 Pytorch nightly wheel for Windows is non functional (LE: cuDNN DLLs are missing, manually adding them solves the issue)",
+    "labels": [
+      "triage review",
+      "module: binaries",
+      "module: build",
+      "module: windows",
+      "module: regression",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-24T13:49:25Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181375"
+  },
+  {
+    "number": 181366,
+    "title": "`torch.compile` crashes with `CppCompileError`",
+    "labels": [
+      "triaged",
+      "oncall: pt2",
+      "module: inductor",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-24T12:42:36Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181366"
+  },
+  {
+    "number": 181351,
+    "title": "# `torch.compile` inductor crash: `NotImplementedError: View` when flatten() is used as conv2d bias",
+    "labels": [
+      "module: convolution",
+      "triaged",
+      "oncall: pt2",
+      "module: inductor",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-24T08:20:15Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181351"
+  },
+  {
+    "number": 181305,
+    "title": "torch.compile(dynamic=True) crashes with RuntimeError('interpreter INTERNAL ASSERT FAILED at \"/pytorch/c10/core/impl/PyObjectSlot.h  when using MultiheadAttention",
+    "labels": [
+      "triage review",
+      "module: crash",
+      "oncall: pt2",
+      "module: fakeTensor",
+      "module: functorch",
+      "module: dynamic shapes",
+      "module: pt2-dispatcher",
+      "dynamo-functorch",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-23T23:30:08Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181305"
+  },
+  {
+    "number": 181304,
+    "title": "torch.compile fails with FakeTensor Assertion Error in torch/_subclasses/fake_tensor.py",
+    "labels": [
+      "triage review",
+      "oncall: pt2",
+      "module: fakeTensor",
+      "module: functorch",
+      "module: aotdispatch",
+      "module: pt2-dispatcher",
+      "dynamo-functorch",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-23T23:17:43Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181304"
+  },
+  {
+    "number": 181302,
+    "title": "[inductor] AssertionError: ({y0: 192, y1: 0, y2: 96}, {y0: 3, y1: 2, y2: 96}) in torch.compile due to invalid loop bounds after MultiheadAttention (flatten + norm pipeline)",
+    "labels": [
+      "triage review",
+      "oncall: pt2",
+      "module: inductor",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-23T22:56:24Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181302"
+  },
+  {
+    "number": 181266,
+    "title": "[inductor] CPP kernel AssertionError: unexpected group: ((12, 14, 10), ()) != (168, 10), () when flatten followed by BatchNorm1d compiled on CPU",
+    "labels": [
+      "triage review",
+      "oncall: pt2",
+      "module: inductor",
+      "oncall: cpu inductor",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-23T18:44:18Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181266"
+  },
+  {
+    "number": 181249,
+    "title": "[vllm] [2.12 regression] Qwen2.5-Math-PRM-7B reward logits diverge from golden (test_prm_models_with_golden_outputs)",
+    "labels": [
+      "triage review",
+      "module: numerical-stability",
+      "module: regression",
+      "module: vllm",
+      "bot-triaged"
+    ],
+    "state": "OPEN",
+    "createdAt": "2026-04-23T15:05:42Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181249"
+  },
+  {
+    "number": 181248,
+    "title": "[vllm] [2.12 regression][B200] test_batch_invariance: nondeterministic outputs 3/5 trials with FLASH_ATTN (B200 only, H100 passes)",
+    "labels": [],
+    "state": "OPEN",
+    "createdAt": "2026-04-23T15:05:42Z",
+    "url": "https://github.com/pytorch/pytorch/issues/181248"
+  }
+]

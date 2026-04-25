@@ -1,0 +1,23 @@
+LABELS:
+B = bug
+REG = regression
+PERF = performance
+
+ISSUES:
+181488 | 2026 | OPEN | PERF | [TensorIterator] reorder_dimensions is sensitive to operand order for commutative ops
+181473 | 2026 | OPEN | B | `torch.jit.ScriptModule.register_full_backward_hook` raises RuntimeError due to `_is_full_backward_hook` attribute type cast failure
+181462 | 2026 | OPEN | B | torch.split raises IndexError incorrectly when called in FakeTensorMode and dim_size == 0 but split_size > 0
+181442 | 2026 | OPEN | PERF | torch.compile: mean/sum on non-contiguous tensor is much slower than eager
+181409 | 2026 | OPEN | B,REG | [vllm] [2.12 regression] Qwen2-VL vision-tower-only LoRA generation diverges from golden output
+181384 | 2026 | OPEN | B | [aot_autograd] RuntimeError: /pytorch/build/aten/src/ATen/RegisterZeroTensor_0.cpp:254: SymIntArrayRef expected to contain only concrete integers when using torch.compile(dynamic=True) with torch.func.grad over GroupNorm
+181375 | 2026 | OPEN | REG | 2026.04.24 Pytorch nightly wheel for Windows is non functional (LE: cuDNN DLLs are missing, manually adding them solves the issue)
+181366 | 2026 | OPEN | B | `torch.compile` crashes with `CppCompileError`
+181351 | 2026 | OPEN | B | # `torch.compile` inductor crash: `NotImplementedError: View` when flatten() is used as conv2d bias
+181305 | 2026 | OPEN | B | torch.compile(dynamic=True) crashes with RuntimeError('interpreter INTERNAL ASSERT FAILED at "/pytorch/c10/core/impl/PyObjectSlot.h  when using MultiheadAttention
+181304 | 2026 | OPEN | B | torch.compile fails with FakeTensor Assertion Error in torch/_subclasses/fake_tensor.py
+181302 | 2026 | OPEN | B | [inductor] AssertionError: ({y0: 192, y1: 0, y2: 96}, {y0: 3, y1: 2, y2: 96}) in torch.compile due to invalid loop bounds after MultiheadAttention (flatten + norm pipeline)
+181266 | 2026 | OPEN | B | [inductor] CPP kernel AssertionError: unexpected group: ((12, 14, 10), ()) != (168, 10), () when flatten followed by BatchNorm1d compiled on CPU
+181249 | 2026 | OPEN | REG | [vllm] [2.12 regression] Qwen2.5-Math-PRM-7B reward logits diverge from golden (test_prm_models_with_golden_outputs)
+181248 | 2026 | OPEN | REG | [vllm] [2.12 regression][B200] test_batch_invariance: nondeterministic outputs 3/5 trials with FLASH_ATTN (B200 only, H100 passes)
+
+ESTIMATED_TOKENS: 574
