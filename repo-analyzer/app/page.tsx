@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 import { getCategories, getIssues, getSummary } from "./apiInteract";
 
+type Issue = {
+  name: string;
+  modules: string[];
+  timeOpen: string;
+  fixAttemptStatus: string;
+};
+
 export default function Home() {
   let repoUrl = "https://github.com/pytorch/pytorch";
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [issues, setIssues] = useState<string[]>([]);
+  const [issues, setIssues] = useState<Issue[]>([]);
   const [loadingIssues, setLoadingIssues] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
@@ -132,7 +139,7 @@ export default function Home() {
                 </button>
               ))
             ) : (
-              <p className="text-xl text-zinc-500">Enter a URL to load categories.</p>
+              <p className="text-xl text-zinc-500">Enter a URL to see categories.</p>
             )}
           </div>
         )}
@@ -151,23 +158,28 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="mt-6 h-64 w-full max-w-2xl overflow-y-auto pr-1 text-left">
+          <div className="mt-6 h-128 w-full max-w-2xl overflow-y-auto pr-1 text-left">
             {loadingIssues ? (
               <p className="text-xl text-zinc-500">Loading...</p>
             ) : selectedCategory ? (
               issues.map((issue) => (
                 <button
-                  key={issue}
+                  key={issue.name}
                   type="button"
-                  onClick={() => setSelectedIssue(issue)}
-                  className="mb-3 block w-full rounded-full border border-zinc-300 bg-white px-6 py-4 text-left
-                  text-xl font-medium text-zinc-800 transition hover:bg-zinc-200"
+                  onClick={() => setSelectedIssue(issue.name)}
+                  className="mb-3 block w-full rounded-3xl border border-zinc-300 bg-white px-6 py-5 text-left
+                  text-zinc-800 transition hover:bg-zinc-200"
                 >
-                  {issue}
+                  <div className="text-2xl font-semibold">{issue.name}</div>
+                  <div className="mt-2 text-lg text-zinc-600">
+                    <p>Modules: {issue.modules.join(", ")}</p>
+                    <p>Time open: {issue.timeOpen}</p>
+                    <p>Fix attempt status: {issue.fixAttemptStatus}</p>
+                  </div>
                 </button>
               ))
             ) : (
-              <p className="text-xl text-zinc-500">Select a category to load issues.</p>
+              <p className="text-xl text-zinc-500">Select a category to see issues.</p>
             )}
           </div>
         )}
@@ -178,7 +190,7 @@ export default function Home() {
           ) : summary ? (
             <p>{summary}</p>
           ) : (
-            <p className="text-zinc-500">Select an issue to load summary.</p>
+            <p className="text-zinc-500">Select an issue to see summary.</p>
           )}
         </div>
       </div>
