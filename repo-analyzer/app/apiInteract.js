@@ -16,9 +16,24 @@ export async function getCategories(url) {
 // Return the issues given the category
 export async function getIssues(category) {
     // Placeholder for an API call
-    let issues = ["issue 1", "issue 2", "issue 3", "issue 4", "issue 5", "issue 6",
-        "issue 7", "issue 8", "issue 9", "issue 10", "issue 11", "issue 12", "issue 13",
-        "issue 14", "issue 15"];
+    let issues = [
+        { name: "Navbar button overlap on mobile", modules: ["ui", "api"], timeOpen: "2 days", fixAttemptStatus: "not started" },
+        { name: "Login redirect fails after auth", modules: ["auth"], timeOpen: "5 days", fixAttemptStatus: "in progress" },
+        { name: "Parser crashes on empty config", modules: ["parser", "ui"], timeOpen: "1 week", fixAttemptStatus: "blocked" },
+        { name: "Database migration timeout on startup", modules: ["database"], timeOpen: "3 days", fixAttemptStatus: "not started" },
+        { name: "Network retry loop never exits", modules: ["network", "api"], timeOpen: "4 hours", fixAttemptStatus: "in review" },
+        { name: "Sidebar layout breaks on resize", modules: ["ui"], timeOpen: "12 days", fixAttemptStatus: "not started" },
+        { name: "CI build fails on lint step", modules: ["build", "ci"], timeOpen: "8 days", fixAttemptStatus: "in progress" },
+        { name: "Docs link to deprecated endpoint", modules: ["docs"], timeOpen: "6 hours", fixAttemptStatus: "not started" },
+        { name: "API response caching corrupts records", modules: ["api", "database"], timeOpen: "9 days", fixAttemptStatus: "needs retry" },
+        { name: "Test suite hangs after fixture setup", modules: ["testing"], timeOpen: "2 weeks", fixAttemptStatus: "not started" },
+        { name: "Performance regression in search results", modules: ["performance", "ui"], timeOpen: "11 days", fixAttemptStatus: "in progress" },
+        { name: "Security warning on token refresh", modules: ["security"], timeOpen: "7 hours", fixAttemptStatus: "not started" },
+        { name: "Deploy script fails on missing env vars", modules: ["deploy", "ci"], timeOpen: "3 weeks", fixAttemptStatus: "stuck" },
+        { name: "Integration test mismatch in data sync", modules: ["integration"], timeOpen: "15 days", fixAttemptStatus: "in review" },
+        { name: "CLI command parser rejects valid flags", modules: ["cli", "api"], timeOpen: "18 hours", fixAttemptStatus: "not started" },
+    ];
+
     await delay();
     return issues;
 }
