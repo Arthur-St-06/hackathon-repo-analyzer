@@ -320,6 +320,24 @@
     .log-warn { color: #9a6700; }
     .log-err  { color: #a10000; }
 
+    .repo-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+      color: #1f2328;
+      background: white;
+      margin-bottom: 16px;
+      transition: border-color 120ms, box-shadow 120ms;
+    }
+    .repo-input:focus {
+      outline: none;
+      border-color: #0969da;
+      box-shadow: 0 0 0 3px rgba(9,105,218,0.12);
+    }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d0d7de; border-radius: 3px; }
@@ -378,13 +396,19 @@ const ACTION_LABELS = {
 
 const S = {
   phase: 'initial',
+  repo: '',             // owner/repo being analyzed — populated from topic_groups.json
   groups: [],
   loadedFindings: {},   // {group_id: findings[]} — in-session per-group cache
   findingsIndex:  {},   // {group_id: {count, generated_at}} — from server index
   selectedId: null,
   expandedNum: null,
-  loadingTopics: false,
-  topicsError: '',
+  // discovery (step 1)
+  discovering:   false,
+  discoverPct:   0,
+  discoverMsg:   '',
+  discoverLog:   [],
+  discoverError: '',
+  // pipeline (step 2)
   running:  false,
   runPct:   0,
   runMsg:   '',
@@ -394,27 +418,85 @@ const S = {
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
-async function loadTopics() {
-  S.loadingTopics = true;
-  S.topicsError   = '';
-  render();
-  try {
-    const data = await fetch('./data/topic_groups.json').then(r => {
-      if (!r.ok) throw new Error(`HTTP ${r.status} — run 01_discover_topics.sh first`);
-      return r.json();
-    });
-    S.groups        = data.groups || [];
-    S.phase         = 'topics';
-    S.loadingTopics = false;
-    // Populate findings index so badges appear immediately on load
-    try {
-      const idx = await fetch('./data/findings_index.json').then(r => r.ok ? r.json() : {});
-      S.findingsIndex = idx || {};
-    } catch(_) {}
+function submitRepo() {
+  const raw = (document.getElementById('repo-input')?.value || '').trim();
+  if (!raw) return;
+  // Accept full GitHub URL or bare owner/repo
+  const m = raw.match(/github\.com\/([^\s/]+\/[^\s/]+)/);
+  const repo = m ? m[1].replace(/\.git$/, '') : raw;
+  if (!/^[\w.\-]+\/[\w.\-]+$/.test(repo)) {
+    S.discoverError = 'Invalid format — paste a GitHub URL or type owner/repo';
     render();
-  } catch (e) {
-    S.loadingTopics = false;
-    S.topicsError   = e.message;
+    return;
+  }
+  discoverRepo(repo);
+}
+
+async function discoverRepo(repo) {
+  S.discovering   = true;
+  S.discoverPct   = 0;
+  S.discoverMsg   = 'Starting…';
+  S.discoverLog   = [];
+  S.discoverError = '';
+  render();
+
+  try {
+    const resp = await fetch('/api/discover', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({repo}),
+    });
+    if (!resp.ok) {
+      const j = await resp.json().catch(() => ({}));
+      throw new Error(j.error || `Server error ${resp.status}`);
+    }
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', finished = false;
+
+    while (!finished) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, {stream: true});
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for (const part of parts) {
+        if (!part.trim()) continue;
+        let evtName = 'message', evtData = '';
+        for (const line of part.split('\n')) {
+          if (line.startsWith('event: ')) evtName = line.slice(7).trim();
+          if (line.startsWith('data: '))  evtData = line.slice(6);
+        }
+        if (!evtData) continue;
+        const d = JSON.parse(evtData);
+        if (evtName === 'progress') {
+          if (d.pct != null) S.discoverPct = d.pct;
+          if (d.msg)         S.discoverMsg = d.msg;
+          if (d.log)         S.discoverLog.push(d.log);
+          render();
+        } else if (evtName === 'done') {
+          S.discoverPct = 100;
+          S.discoverMsg = 'Done!';
+          render();
+          finished = true;
+          // Transition to topics view using data embedded in the done event
+          S.groups        = d.groups?.groups || [];
+          S.repo          = d.groups?.repo   || repo;
+          S.findingsIndex = d.findings_index || {};
+          S.discovering   = false;
+          S.phase         = 'topics';
+          document.getElementById('header-meta').textContent = S.repo;
+          render();
+          break;
+        } else if (evtName === 'error') {
+          throw new Error(d.msg);
+        }
+      }
+    }
+  } catch(e) {
+    S.discovering   = false;
+    S.discoverError = e.message;
     render();
   }
 }
@@ -533,32 +615,55 @@ function render() {
   } else {
     root.innerHTML = renderSplit();
   }
-  const log = document.getElementById('run-log');
-  if (log) log.scrollTop = log.scrollHeight;
+  const runLog = document.getElementById('run-log');
+  if (runLog) runLog.scrollTop = runLog.scrollHeight;
+  const discoverLog = document.getElementById('discover-log');
+  if (discoverLog) discoverLog.scrollTop = discoverLog.scrollHeight;
 }
 
 // Step 1: discover topics
 function renderInitial() {
+  if (S.discovering) {
+    const logLines = S.discoverLog.slice(-60).map(l => {
+      const c = /groups →/.test(l) ? 'log-ok' : /error/i.test(l) ? 'log-err' : '';
+      return `<div class="${c}">${esc(l)}</div>`;
+    }).join('');
+    return `<div class="page">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h2>Fetching &amp; Analyzing Repository…</h2>
+        <div class="progress-wrap"><div class="progress-bar" style="width:${S.discoverPct}%"></div></div>
+        <div class="progress-msg">${esc(S.discoverMsg)}</div>
+        <div class="run-log" id="discover-log">${logLines}</div>
+      </div>
+    </div>`;
+  }
+
   return `<div class="page">
     <div class="step-card">
       <div class="step-num">1</div>
-      <h2>Discover Topic Groups</h2>
-      <p>Cluster repository issues by label co-occurrence into named topic areas. Run the discovery script in your terminal, then load the results here.</p>
+      <h2>Analyze a GitHub Repository</h2>
+      <p>Paste a GitHub URL or type <code>owner/repo</code> to fetch issues and discover topic groups.</p>
+      <input id="repo-input" class="repo-input" type="text"
+             placeholder="https://github.com/huggingface/transformers"
+             onkeydown="if(event.key==='Enter')submitRepo()">
       <div class="step-actions">
-        <button class="btn btn-primary" onclick="loadTopics()" ${S.loadingTopics ? 'disabled' : ''}>
-          ${S.loadingTopics ? 'Loading…' : 'Load Topics →'}
-        </button>
+        <button class="btn btn-primary" onclick="submitRepo()">Analyze Repository →</button>
       </div>
-      ${S.topicsError ? `<div class="step-error">⚠ ${esc(S.topicsError)}</div>` : ''}
+      ${S.discoverError ? `<div class="step-error">⚠ ${esc(S.discoverError)}</div>` : ''}
     </div>
   </div>`;
 }
 
 // Two-column layout: sidebar + main
 function renderSplit() {
+  const repoLabel = S.repo
+    ? `<a href="https://github.com/${esc(S.repo)}" target="_blank" rel="noopener"
+          style="font-size:12px;color:#57606a;font-family:ui-monospace,monospace;">${esc(S.repo)}</a>`
+    : '';
   return `<div class="split">
     <aside>
-      <h2>Topic Groups</h2>
+      <h2>Topic Groups ${repoLabel}</h2>
       <div class="group-list">${renderSidebar()}</div>
     </aside>
     <div class="main">

@@ -28,8 +28,11 @@ from pathlib import Path
 REPO_ROOT   = Path(__file__).parent.parent
 HIGH_TRUST  = {"COLLABORATOR", "MEMBER", "OWNER"}
 BOT_AUTHORS = {
-    "pytorch-bot", "facebook-github-bot", "pytorchmergebot",
-    "pytorch-probot", "github-actions", "codecov",
+    # generic
+    "github-actions", "github-actions[bot]", "dependabot", "dependabot[bot]",
+    "codecov", "codecov-io", "stale[bot]", "allcontributors",
+    # pytorch-specific (harmless on other repos)
+    "pytorch-bot", "facebook-github-bot", "pytorchmergebot", "pytorch-probot",
 }
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 

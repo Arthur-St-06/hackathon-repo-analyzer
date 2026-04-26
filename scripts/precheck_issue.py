@@ -22,11 +22,13 @@ import sys
 from pathlib import Path
 
 REPO_ROOT   = Path(__file__).parent.parent
-REPO        = "pytorch/pytorch"
 HIGH_TRUST  = {"COLLABORATOR", "MEMBER", "OWNER"}
 BOT_AUTHORS = {
-    "pytorch-bot", "facebook-github-bot", "pytorchmergebot",
-    "pytorch-probot", "github-actions", "codecov",
+    # generic
+    "github-actions", "github-actions[bot]", "dependabot", "dependabot[bot]",
+    "codecov", "codecov-io", "stale[bot]", "allcontributors",
+    # pytorch-specific (harmless on other repos)
+    "pytorch-bot", "facebook-github-bot", "pytorchmergebot", "pytorch-probot",
 }
 
 _ALREADY_FIXED = re.compile(
@@ -59,11 +61,11 @@ _BLOCKED_ACTION = re.compile(
 )
 
 
-def fetch_issue(number: int) -> dict:
+def fetch_issue(number: int, repo: str) -> dict:
     result = subprocess.run(
         [
             "gh", "issue", "view", str(number),
-            "--repo", REPO,
+            "--repo", repo,
             "--json", "title,state,body,labels,comments,createdAt",
         ],
         capture_output=True, text=True, timeout=30,
@@ -113,7 +115,15 @@ def main() -> None:
     issue_number = int(sys.argv[1])
     raw_path     = Path(sys.argv[2])
 
-    issue = fetch_issue(issue_number)
+    # Read repo from the raw finding JSON
+    try:
+        with open(raw_path) as f:
+            raw = json.load(f)
+        repo = raw.get("repo", "pytorch/pytorch")
+    except Exception:
+        repo = "pytorch/pytorch"
+
+    issue = fetch_issue(issue_number, repo)
     if not issue:
         print("PASS")
         sys.exit(0)

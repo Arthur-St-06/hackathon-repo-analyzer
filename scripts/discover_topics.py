@@ -2,15 +2,16 @@
 """
 discover_topics.py — Pure-Python topic discovery + Haiku group naming.
 
-  1. Read corpus_full.json
+  1. Read corpus JSON
   2. Compute per-label stats          → data/topics.json      (~0.03s, Python)
   3. Jaccard co-occurrence clustering → raw groups            (~0.03s, Python)
   4. Single Haiku call to name groups → data/topic_groups.json (~15s)
 
 Usage:
-  python3 scripts/discover_topics.py
+  python3 scripts/discover_topics.py [--repo owner/repo] [--corpus path/to/corpus.json]
 """
 
+import argparse
 import json
 import re
 import subprocess
@@ -20,11 +21,26 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT   = Path(__file__).parent.parent
-CORPUS      = REPO_ROOT / "data" / "corpus_full.json"
 TOPICS_OUT  = REPO_ROOT / "data" / "topics.json"
 GROUPS_OUT  = REPO_ROOT / "data" / "topic_groups.json"
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 
+# Labels that represent issue STATUS or META — not suitable for topic clustering.
+# They will still appear in per-label stats but won't be clustered into groups.
+STATUS_LABELS = {
+    "bug", "enhancement", "question", "documentation", "docs", "invalid",
+    "duplicate", "wontfix", "won't fix", "wont fix", "good first issue",
+    "help wanted", "help-wanted", "needs triage", "needs-triage", "triage",
+    "triaged", "needs-investigation", "feature request", "feature_request",
+    "feature", "stale", "pinned", "security", "dependencies", "hacktoberfest",
+    "needs reproduction", "needs-repro", "wip", "work in progress", "blocked",
+    "high priority", "low priority", "medium priority", "priority: high",
+    "priority: medium", "priority: low", "actionable", "regression",
+    "ci", "build", "flaky", "flaky-tests", "meta", "tracker", "umbrella",
+    "breaking change", "performance", "rfc", "discussion", "won't fix",
+}
+
+# PyTorch-specific display overrides — ignored for other repos.
 DISPLAY_OVERRIDES = {
     "module: cuda":                          "CUDA",
     "module: mkl":                           "MKL",
@@ -51,6 +67,11 @@ def get_labels(issue: dict) -> list[str]:
     return [l if isinstance(l, str) else l.get("name", "") for l in issue.get("labels", [])]
 
 
+def is_domain_label(label: str) -> bool:
+    """True if this label represents a domain/topic (not a status/meta label)."""
+    return label.lower().strip() not in STATUS_LABELS
+
+
 def make_slug(label: str) -> str:
     s = label.removeprefix("module: ")
     return re.sub(r"[^a-z0-9]+", "_", s.lower()).strip("_")
@@ -67,9 +88,9 @@ def actionability(label: str, open_count: int) -> str:
     score = 0
     if open_count >= 50:  score += 1
     if open_count >= 200: score += 1
-    if any(k in label for k in ("correctness", "linear algebra", "cuda", "performance", "regression")):
+    if any(k in label for k in ("correctness", "linear algebra", "cuda", "performance", "regression", "bug", "error")):
         score += 1
-    if not any(b in label for b in ("ci", "build", "docs", "mobile", "android", "ios")):
+    if not any(b in label for b in ("ci", "build", "docs", "mobile", "android", "ios", "documentation")):
         score += 1
     return "high" if score >= 3 else "medium" if score == 2 else "low"
 
@@ -85,11 +106,12 @@ def compute_topics(issues: list[dict]) -> list[dict]:
 
     for iss in issues:
         num     = iss["number"]
-        is_open = iss.get("state", "") == "OPEN"
+        is_open = iss.get("state", "") in ("OPEN", "open")
         recent  = iss.get("createdAt", "") >= "2023-01-01"
         for lbl in get_labels(iss):
-            if not lbl.startswith("module:"):
+            if not lbl.strip():
                 continue
+            # Track ALL labels for stats, but only domain labels for clustering
             label_issues[lbl].append(num)
             if is_open:
                 label_open[lbl].append(num)
@@ -108,8 +130,9 @@ def compute_topics(issues: list[dict]) -> list[dict]:
             "open_count":         len(open_),
             "open_pct":           round(len(open_) / total, 2) if total else 0.0,
             "recent_open_count":  len(label_recent[label]),
+            "is_domain_label":    is_domain_label(label),
             "actionability_hint": actionability(label, len(open_)),
-            "description":        f"Bugs in the {make_display(label)} module.",
+            "description":        f"Issues in the {make_display(label)} area.",
             "sample_issues":      open_[:5],
         })
 
@@ -121,7 +144,14 @@ def compute_topics(issues: list[dict]) -> list[dict]:
 
 def cluster_labels(issues: list[dict], topics: list[dict],
                    min_open: int = 10, target: int = 20) -> list[list[str]]:
-    eligible = {t["label"] for t in topics if t["open_count"] >= min_open}
+    # Only cluster domain labels with enough open issues
+    eligible = {
+        t["label"] for t in topics
+        if t["open_count"] >= min_open and t["is_domain_label"]
+    }
+
+    if not eligible:
+        return []
 
     co:   dict[tuple, int] = defaultdict(int)
     solo: dict[str, int]   = defaultdict(int)
@@ -159,7 +189,7 @@ def cluster_labels(issues: list[dict], topics: list[dict],
 
 # ── Stage 3: name clusters with one Haiku call ────────────────────────────────
 
-def name_clusters(clusters: list[list[str]], by_label: dict) -> list[dict]:
+def name_clusters(clusters: list[list[str]], by_label: dict, repo: str) -> list[dict]:
     blocks = []
     for i, cluster in enumerate(clusters):
         members = "\n".join(
@@ -170,7 +200,7 @@ def name_clusters(clusters: list[list[str]], by_label: dict) -> list[dict]:
         blocks.append(f"GROUP {i} ({open_total} open issues total):\n{members}")
 
     prompt = (
-        "Name each group of PyTorch issue labels for a contributor-facing bug research tool.\n"
+        f"Name each group of GitHub issue labels for a contributor-facing bug research tool on the {repo} repository.\n"
         "Return ONLY a JSON array — no markdown, no explanation.\n"
         "Each element: {\"group\": <index>, \"display_name\": \"<3-6 words>\", "
         "\"description\": \"<one sentence>\", \"actionability\": \"high|medium|low\"}\n\n"
@@ -215,8 +245,20 @@ def name_clusters(clusters: list[list[str]], by_label: dict) -> list[dict]:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--repo",   default="pytorch/pytorch", help="owner/repo")
+    ap.add_argument("--corpus", default=str(REPO_ROOT / "data" / "corpus_full.json"),
+                    help="Path to corpus JSON file")
+    args = ap.parse_args()
+
+    corpus_path = Path(args.corpus)
+    if not corpus_path.exists():
+        print(f"ERROR: corpus not found at {corpus_path}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Repo: {args.repo}")
     print(f"Reading corpus...", end=" ", flush=True)
-    with open(CORPUS) as f:
+    with open(corpus_path) as f:
         issues = json.load(f)
     print(f"{len(issues)} issues")
 
@@ -226,31 +268,36 @@ def main() -> None:
     now       = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     topics_payload = {
         "generated_at": now,
-        "corpus_file":  "data/corpus_full.json",
+        "repo":         args.repo,
+        "corpus_file":  str(corpus_path),
         "total_issues": len(issues),
         "topics":       topics,
     }
     TOPICS_OUT.parent.mkdir(parents=True, exist_ok=True)
     with open(TOPICS_OUT, "w") as f:
         json.dump(topics_payload, f, indent=2); f.write("\n")
-    print(f"{len(topics)} labels → {TOPICS_OUT.name}")
+    domain_count = sum(1 for t in topics if t["is_domain_label"] and t["open_count"] >= 10)
+    print(f"{len(topics)} labels ({domain_count} domain) → {TOPICS_OUT.name}")
 
     print("Clustering labels...", end=" ", flush=True)
     clusters = cluster_labels(issues, topics)
+    if not clusters:
+        print("WARNING: no domain labels with ≥10 open issues found for clustering", file=sys.stderr)
+        clusters = []
     print(f"{len(clusters)} clusters")
 
     print("Naming clusters via Haiku...", end=" ", flush=True)
-    groups = name_clusters(clusters, by_label)
+    groups = name_clusters(clusters, by_label, args.repo) if clusters else []
     print(f"done")
 
-    # Low-volume labels that didn't make it into any cluster
+    # Low-volume or status labels that didn't make it into any cluster
     clustered    = {l for c in clusters for l in c}
     other_labels = [t["label"] for t in topics if t["label"] not in clustered]
     if other_labels:
         groups.append({
             "group_id":          "other",
             "display_name":      "Other / Low Volume",
-            "description":       "Labels with fewer than 10 open issues.",
+            "description":       "Labels with fewer than 10 open issues or status labels.",
             "actionability":     "low",
             "labels":            other_labels,
             "label_count":       len(other_labels),
@@ -259,7 +306,8 @@ def main() -> None:
 
     groups_payload = {
         "generated_at": now,
-        "corpus_file":  "data/corpus_full.json",
+        "repo":         args.repo,
+        "corpus_file":  str(corpus_path),
         "total_groups": len(groups),
         "groups":       groups,
     }

@@ -2,29 +2,47 @@
 # 02_surface.sh — Score and triage open issues for a selected topic group
 #
 # Usage:
-#   ./tools/02_surface.sh <group_id>
+#   ./tools/02_surface.sh <group_id> [--repo owner/repo] [--top N]
 #
-# Example:
-#   ./tools/02_surface.sh cuda_gpu_kernels
+# Options:
+#   --repo owner/repo   Repository (default: read from topic_groups.json, fallback pytorch/pytorch)
+#   --top N             Maximum raw findings to write (default: 50)
 #
 # Produces:
 #   data/selected_topics.json  — the user's selection
-#   data/scored_issues.json    — all eligible issues ranked by acceptance score
+#   data/scored_issues.json    — all eligible issues ranked by score
 #   findings/raw/*.json        — one raw finding per triaged issue
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CORPUS="$REPO_ROOT/data/corpus_full.json"
 GROUPS_FILE="$REPO_ROOT/data/topic_groups.json"
 SELECTED_FILE="$REPO_ROOT/data/selected_topics.json"
 SCORED_FILE="$REPO_ROOT/data/scored_issues.json"
 RAW_DIR="$REPO_ROOT/findings/raw"
 
-# ── Arguments ──────────────────────────────────────────────────────────────────
+# ── Argument parsing ───────────────────────────────────────────────────────────
 
-if [[ $# -eq 0 ]]; then
-  echo "Usage: $0 <group_id> [max_findings]" >&2
+GROUP_ID=""
+REPO=""
+MAX_FINDINGS=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --repo) REPO="$2";         shift 2 ;;
+    --top)  MAX_FINDINGS="$2"; shift 2 ;;
+    -*)     echo "Unknown option: $1" >&2; exit 1 ;;
+    *)
+      if [[ -z "$GROUP_ID" ]]; then GROUP_ID="$1"
+      elif [[ -z "$MAX_FINDINGS" ]]; then MAX_FINDINGS="$1"
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [[ -z "$GROUP_ID" ]]; then
+  echo "Usage: $0 <group_id> [--repo owner/repo] [--top N]" >&2
   echo ""
   if [[ -f "$GROUPS_FILE" ]]; then
     echo "Available groups:"
@@ -40,17 +58,37 @@ for g in data['groups']:
   exit 1
 fi
 
-GROUP_ID="$1"
-MAX_FINDINGS="${2:-}"
+# ── Resolve repo ───────────────────────────────────────────────────────────────
+
+if [[ -z "$REPO" && -f "$GROUPS_FILE" ]]; then
+  REPO=$(python3 -c "
+import json, sys
+with open('$GROUPS_FILE') as f:
+    d = json.load(f)
+print(d.get('repo', 'pytorch/pytorch'))
+" 2>/dev/null || echo "pytorch/pytorch")
+fi
+REPO="${REPO:-pytorch/pytorch}"
+
+# Derive corpus path and short slug for file naming
+CORPUS="$REPO_ROOT/data/corpus_${REPO//\//_}.json"
+REPO_SLUG="${REPO##*/}"          # "transformers" from "huggingface/transformers"
+REPO_SLUG="${REPO_SLUG//-/_}"   # normalise hyphens to underscores
+
+echo "Repo:  $REPO"
+echo "Group: $GROUP_ID"
 
 # ── Prerequisites ──────────────────────────────────────────────────────────────
 
-for f in "$CORPUS" "$GROUPS_FILE"; do
-  if [[ ! -f "$f" ]]; then
-    echo "ERROR: $f not found. Run 01_discover_topics.sh first." >&2
-    exit 1
-  fi
-done
+if [[ ! -f "$GROUPS_FILE" ]]; then
+  echo "ERROR: $GROUPS_FILE not found. Run 01_discover_topics.sh first." >&2
+  exit 1
+fi
+
+if [[ ! -f "$CORPUS" ]]; then
+  echo "ERROR: $CORPUS not found. Run 01_discover_topics.sh --repo $REPO first." >&2
+  exit 1
+fi
 
 # Validate group_id exists
 VALID=$(python3 -c "
@@ -69,12 +107,6 @@ fi
 
 RAW_COUNT=$(find "$RAW_DIR" -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$RAW_COUNT" -gt 0 ]]; then
-  echo "WARNING: $RAW_DIR contains $RAW_COUNT existing finding(s)."
-  read -r -p "Clear and start fresh? [y/N] " CONFIRM
-  if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
-    echo "Aborted."
-    exit 0
-  fi
   rm -f "$RAW_DIR"/*.json
 fi
 
@@ -111,12 +143,13 @@ def get_labels(issue):
 
 open_count = sum(
     1 for i in all_issues
-    if i['state'] == 'OPEN' and any(l in selected_labels for l in get_labels(i))
+    if i['state'] in ('OPEN', 'open') and any(l in selected_labels for l in get_labels(i))
 )
 
 out = {
     'created_at': '$TIMESTAMP',
-    'corpus_file': 'data/corpus_full.json',
+    'repo': '$REPO',
+    'corpus_file': '$CORPUS',
     'selected_group': {
         'group_id': group['group_id'],
         'display_name': group_name,
@@ -151,6 +184,8 @@ TOP_N="${MAX_FINDINGS:-50}"
 echo ""
 echo "Scoring issues..."
 python3 "$REPO_ROOT/scripts/score_issues.py" \
+  --repo "$REPO" \
+  --corpus "$CORPUS" \
   || { echo "ERROR: score_issues.py failed" >&2; exit 1; }
 
 if [[ ! -f "$SCORED_FILE" ]]; then
@@ -167,7 +202,7 @@ echo "Writing top $TOP_N issues as raw findings..."
 # ── Write raw findings (no LLM) ───────────────────────────────────────────────
 
 python3 - <<PYEOF
-import json, os
+import json, os, re
 from datetime import datetime, timezone
 
 with open('$SCORED_FILE') as f:
@@ -178,29 +213,34 @@ selected      = data.get('selected_topics', [])
 now           = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 raw_dir       = '$RAW_DIR'
 top_n         = int('$TOP_N')
+repo          = '$REPO'
+repo_slug     = '$REPO_SLUG'
 
 os.makedirs(raw_dir, exist_ok=True)
-
-CORRECTNESS_LABELS = {'module: correctness (silent)', 'module: regression'}
-PERF_LABELS        = {'module: performance'}
 
 def classify(labels):
     s = set(labels)
     if 'module: correctness (silent)' in s:
         return 'correctness_silent'
-    if s & PERF_LABELS and s & {'module: regression'}:
+    if s & {'module: performance'} and s & {'module: regression'}:
         return 'performance_regression'
+    # Generic classification for non-PyTorch repos
+    if any('bug' in l.lower() for l in s):
+        return 'bug'
+    if any('regression' in l.lower() for l in s):
+        return 'regression'
     return 'unknown'
 
 written = 0
 for iss in issues[:top_n]:
-    cls = classify(iss.get('labels', []))
+    cls        = classify(iss.get('labels', []))
+    finding_id = f"{repo_slug}_{iss['number']}"
     finding = {
-        'finding_id':               f"pytorch_{iss['number']}",
-        'repo':                     'pytorch/pytorch',
+        'finding_id':               finding_id,
+        'repo':                     repo,
         'issue_number':             iss['number'],
         'issue_title':              iss['title'],
-        'issue_url':                iss['url'],
+        'issue_url':                iss.get('url', f"https://github.com/{repo}/issues/{iss['number']}"),
         'issue_state':              'OPEN',
         'issue_created_at':         iss.get('created_at', ''),
         'issue_labels':             iss.get('labels', []),
@@ -224,7 +264,7 @@ for iss in issues[:top_n]:
         'created_at':               now,
         'updated_at':               now,
     }
-    out = os.path.join(raw_dir, f"pytorch_{iss['number']}.json")
+    out = os.path.join(raw_dir, f"{finding_id}.json")
     with open(out, 'w') as f:
         json.dump(finding, f, indent=2); f.write('\n')
     written += 1
@@ -236,7 +276,7 @@ PYEOF
 
 echo ""
 RAW_WRITTEN=$(find "$RAW_DIR" -name "*.json" | wc -l | tr -d ' ')
-echo "=== Surface Agent Results ==="
+echo "=== Surface Results ==="
 echo "Raw findings written: $RAW_WRITTEN"
 
 if [[ "$RAW_WRITTEN" -gt 0 ]]; then
@@ -262,5 +302,4 @@ PYEOF
 fi
 
 echo ""
-echo "Scored issues: $SCORED_FILE"
-echo "Next:          run ./tools/03_validate.sh to investigate and score each finding."
+echo "Next: run ./tools/03_validate.sh to validate each finding."

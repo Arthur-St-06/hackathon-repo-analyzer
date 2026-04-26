@@ -38,12 +38,12 @@ fi
 # ── Build target file list ─────────────────────────────────────────────────────
 
 if [[ $# -gt 0 ]]; then
-  # One or more issue numbers provided as arguments
+  # One or more issue numbers provided as arguments — find matching raw files
   RAW_FILES=()
   for arg in "$@"; do
-    TARGET="$RAW_DIR/pytorch_${arg}.json"
-    if [[ ! -f "$TARGET" ]]; then
-      echo "ERROR: $TARGET not found." >&2
+    TARGET=$(find "$RAW_DIR" -name "*_${arg}.json" 2>/dev/null | head -1)
+    if [[ -z "$TARGET" ]]; then
+      echo "ERROR: No raw finding for issue #${arg} in $RAW_DIR." >&2
       exit 1
     fi
     RAW_FILES+=("$TARGET")
@@ -64,7 +64,10 @@ TOTAL=${#RAW_FILES[@]}
 validate_one() {
   local raw_file="$1"
   local issue_num
-  issue_num=$(basename "$raw_file" .json | sed 's/pytorch_//')
+  issue_num=$(python3 -c "import json; print(json.load(open('$raw_file'))['issue_number'])" 2>/dev/null)
+  if [[ -z "$issue_num" ]]; then
+    issue_num=$(basename "$raw_file" .json | grep -oE '[0-9]+$')
+  fi
   local log="/tmp/validator_output_${issue_num}.txt"
 
   echo "[#$issue_num] pre-checking..."
@@ -139,12 +142,13 @@ echo ""
 PROCESSED=0
 SKIPPED=0
 for raw_file in "${RAW_FILES[@]}"; do
-  issue_num=$(basename "$raw_file" .json | sed 's/pytorch_//')
+  issue_num=$(python3 -c "import json; print(json.load(open('$raw_file'))['issue_number'])" 2>/dev/null \
+    || basename "$raw_file" .json | grep -oE '[0-9]+$')
   log="/tmp/validator_output_${issue_num}.txt"
 
   if grep -qE "PRECHECK_REJECT|SKIP:" "$log" 2>/dev/null; then
     SKIPPED=$((SKIPPED+1))
-  elif [[ -f "$VAL_DIR/pytorch_$issue_num.json" ]]; then
+  elif [[ -f "$VAL_DIR/$(basename "$raw_file")" ]]; then
     PROCESSED=$((PROCESSED+1))
   else
     echo "WARNING: No output file for #$issue_num"

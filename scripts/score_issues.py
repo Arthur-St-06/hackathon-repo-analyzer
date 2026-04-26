@@ -25,14 +25,16 @@ from pathlib import Path
 
 REPO_ROOT   = Path(__file__).parent.parent
 SEL_FILE    = REPO_ROOT / "data" / "selected_topics.json"
-CORPUS_FILE = REPO_ROOT / "data" / "corpus_full.json"
 OUT_FILE    = REPO_ROOT / "data" / "scored_issues.json"
 
 HIGH_TRUST = {"COLLABORATOR", "MEMBER", "OWNER"}
 
 BOT_AUTHORS = {
-    "pytorch-bot", "facebook-github-bot", "pytorchmergebot",
-    "pytorch-probot", "github-actions", "codecov",
+    # generic
+    "github-actions", "github-actions[bot]", "dependabot", "dependabot[bot]",
+    "codecov", "codecov-io", "stale[bot]", "allcontributors",
+    # pytorch-specific (harmless on other repos)
+    "pytorch-bot", "facebook-github-bot", "pytorchmergebot", "pytorch-probot",
 }
 
 DEFAULT_TOP_N   = 150   # fetch full body+comments for top N pre-scored issues
@@ -68,7 +70,7 @@ def is_excluded(issue: dict) -> tuple[bool, str]:
             and "module: correctness (silent)" not in labels
             and "module: regression" not in labels):
         return True, "E8: enhancement"
-    if issue.get("state", "").upper() == "CLOSED":
+    if issue.get("state", "").upper() not in ("OPEN", ""):
         return True, "E9: closed"
     if ("module: docs" in labels
             and "module: correctness (silent)" not in labels
@@ -115,7 +117,7 @@ def detect_repro(body: str) -> bool:
         return True
     for block in _CODE_BLOCK.finditer(body):
         code = block.group(1)
-        if "import torch" in code or "torch." in code:
+        if "import " in code or re.search(r'\w+\.\w+\(', code):
             return True
     return False
 
@@ -257,8 +259,10 @@ def fetch_issue(number: int, repo: str) -> dict | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--repo",  default="pytorch/pytorch")
-    parser.add_argument("--top",   type=int, default=DEFAULT_TOP_N,
+    parser.add_argument("--repo",   default="pytorch/pytorch")
+    parser.add_argument("--corpus", default=None,
+                        help="Path to corpus JSON (default: read from selected_topics.json)")
+    parser.add_argument("--top",    type=int, default=DEFAULT_TOP_N,
                         help="Number of top pre-scored issues to fetch full bodies for")
     args = parser.parse_args()
 
@@ -271,8 +275,27 @@ def main() -> None:
         sel = json.load(f)
     selected_labels = {t["label"] for t in sel.get("selected_topics", [])}
 
-    with open(CORPUS_FILE) as f:
+    # Resolve corpus path: CLI arg > selected_topics.json > default
+    if args.corpus:
+        corpus_path = Path(args.corpus)
+    elif sel.get("corpus_file"):
+        corpus_path = Path(sel["corpus_file"])
+    else:
+        corpus_path = REPO_ROOT / "data" / "corpus_full.json"
+
+    if not corpus_path.exists():
+        print(f"ERROR: corpus not found at {corpus_path}", file=sys.stderr)
+        sys.exit(1)
+
+    with open(corpus_path) as f:
         corpus = json.load(f)
+
+    # gh issue list returns labels as objects; normalize to strings
+    for issue in corpus:
+        issue["labels"] = [
+            l.get("name", str(l)) if isinstance(l, dict) else str(l)
+            for l in issue.get("labels", [])
+        ]
 
     print(f"Repo:            {args.repo}")
     print(f"Selected topics: {', '.join(sorted(selected_labels))}")
@@ -284,7 +307,7 @@ def main() -> None:
     candidates: list[dict] = []
     n_excluded = 0
     for issue in corpus:
-        if issue.get("state", "").upper() != "OPEN":
+        if issue.get("state", "").upper() not in ("OPEN", ""):
             continue
         labels = set(issue.get("labels", []))
         if not (labels & selected_labels):

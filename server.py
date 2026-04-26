@@ -25,8 +25,85 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if path.startswith('/api/run/'):
             group_id = path.removeprefix('/api/run/').strip('/')
             self._stream(group_id)
+        elif path == '/api/discover':
+            self._handle_discover()
         else:
             self.send_error(404)
+
+    def _handle_discover(self):
+        length = int(self.headers.get('Content-Length', 0))
+        body   = json.loads(self.rfile.read(length)) if length else {}
+        repo   = (body.get('repo') or '').strip()
+
+        if not re.match(r'^[\w.\-]+/[\w.\-]+$', repo):
+            self.send_response(400)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(b'{"error":"Invalid repo format - use owner/repo"}')
+            return
+
+        with _lock:
+            if _state['running']:
+                self.send_response(409)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"error":"Pipeline already running"}')
+                return
+            _state['running'] = True
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/event-stream')
+        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Connection', 'keep-alive')
+        self.end_headers()
+
+        try:
+            self._discover(repo)
+            with open(REPO_ROOT / 'public' / 'data' / 'topic_groups.json') as f:
+                groups_data = json.load(f)
+            # Also load findings index if present
+            idx_path = REPO_ROOT / 'public' / 'data' / 'findings_index.json'
+            findings_index = json.loads(idx_path.read_text()) if idx_path.exists() else {}
+            self._emit('done', {
+                'pct': 100, 'msg': 'Ready!',
+                'groups': groups_data,
+                'findings_index': findings_index,
+            })
+        except Exception as e:
+            self._emit('error', {'msg': str(e)})
+        finally:
+            with _lock:
+                _state['running'] = False
+
+    def _discover(self, repo: str):
+        self._emit('progress', {'pct': 2, 'msg': 'Starting…', 'log': None})
+        pct = [2]
+
+        def on_line(line):
+            p, m = pct[0], None
+            if 'Fetching issue corpus' in line:
+                p, m = 5, 'Fetching issues from GitHub…'
+            elif re.search(r'Fetched \d+ issues', line):
+                n = re.search(r'(\d+) issues', line)
+                p, m = 30, f'{n.group(1)} issues fetched' if n else 'Issues fetched'
+            elif 'already exists' in line.lower() or 'use --fresh' in line:
+                n = re.search(r'(\d+) issues', line)
+                p, m = 30, f'Using cached corpus ({n.group(1)} issues)' if n else 'Using cached corpus'
+            elif 'Reading corpus' in line:
+                p, m = 35, 'Reading corpus…'
+            elif 'Computing per-label stats' in line:
+                p, m = 50, 'Computing label statistics…'
+            elif 'Clustering labels' in line:
+                p, m = 70, 'Clustering labels…'
+            elif 'Naming clusters' in line:
+                p, m = 82, 'Naming topic groups with AI…'
+            elif re.search(r'\d+ groups →', line):
+                n = re.search(r'(\d+) groups', line)
+                p, m = 95, f'{n.group(1)} topic groups found' if n else 'Topic groups ready'
+            pct[0] = p
+            self._emit('progress', {'pct': p, 'msg': m, 'log': line})
+
+        self._proc(f'bash tools/01_discover_topics.sh --repo {repo}', on_line)
 
     def _emit(self, event, data):
         try:
@@ -34,6 +111,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.wfile.flush()
         except OSError:
             pass
+
+    def _read_repo(self) -> str:
+        """Read the target repo from topic_groups.json metadata."""
+        try:
+            with open(REPO_ROOT / 'data' / 'topic_groups.json') as f:
+                return json.load(f).get('repo', 'pytorch/pytorch')
+        except Exception:
+            return 'pytorch/pytorch'
 
     def _stream(self, group_id):
         with _lock:
@@ -51,8 +136,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Connection', 'keep-alive')
         self.end_headers()
 
+        repo = self._read_repo()
         try:
-            self._surface(group_id)
+            self._surface(group_id, repo)
             cached = self._restore_from_cache()
             self._validate(group_id, skip=cached)
             self._save_to_cache()
@@ -75,7 +161,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if proc.returncode != 0:
             raise RuntimeError(f'Script exited with code {proc.returncode}')
 
-    def _surface(self, group_id):
+    def _surface(self, group_id, repo):
         for f in (REPO_ROOT / 'findings' / 'raw').glob('*.json'):
             f.unlink()
         for f in (REPO_ROOT / 'findings' / 'validated').glob('*.json'):
@@ -99,7 +185,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             pct[0] = p
             self._emit('progress', {'pct': p, 'msg': m, 'log': line})
 
-        self._proc(f'bash tools/02_surface.sh {group_id} 2', on_line)
+        self._proc(f'bash tools/02_surface.sh {group_id} --top 10 --repo {repo}', on_line)
 
     def _restore_from_cache(self) -> set:
         """Copy valid cached findings into validated/. Returns set of cached issue numbers."""
