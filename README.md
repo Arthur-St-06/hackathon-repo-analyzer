@@ -1,158 +1,167 @@
-# pytorch-agents-learning
+# PyTorch Bug Research Pipeline
 
-A multi-agent pipeline that automatically identifies, triages, and validates contributor-fixable bugs in [pytorch/pytorch](https://github.com/pytorch/pytorch).
-
-The pipeline scans open GitHub issues, applies domain filtering, scores each finding with a confidence model, and produces structured JSON ready for a contributor to act on.
+A multi-agent pipeline that automatically identifies, triages, and validates contributor-fixable bugs in [pytorch/pytorch](https://github.com/pytorch/pytorch). It clusters open issues into topic groups, surfaces the highest-signal candidates, and validates each one with live GitHub data and an LLM — then presents the results in a browser UI.
 
 ---
 
-## Results (current run)
+## Quick start
 
-| stat | count |
+```bash
+# Prerequisites: Python 3, Claude Code CLI (`claude`), GitHub CLI (`gh`) authenticated
+gh auth login          # if not already done
+python3 server.py      # serves at http://localhost:8080
+```
+
+Open **http://localhost:8080**, click **Load Topics**, pick a group, click **Run Analysis**.
+
+---
+
+## Full workflow
+
+### 1 — Discover topic groups (`tools/01_discover_topics.sh`)
+
+Fetches open issues from `pytorch/pytorch` and clusters them by label co-occurrence into named topic areas (e.g. "CUDA and Distributed", "CPU Performance", "Autograd and Correctness").
+
+```
+data/topics.json            raw label clusters
+data/topic_groups.json      merged, named groups with open-issue counts
+public/data/topic_groups.json  copy served to the UI
+```
+
+This step runs once and is reused until you re-run it. The UI loads this file to populate the sidebar.
+
+### 2 — Surface raw findings (`tools/02_surface.sh <group_id> [limit]`)
+
+Scores every open issue in the selected group against a set of domain rules (exclusion filters, inclusion gates, priority tiers) without making any LLM calls. The top-N issues by score are written as raw finding JSON.
+
+```
+findings/raw/pytorch_<N>.json     one file per candidate issue
+```
+
+Hard exclusions (distributions, RNN, dataloader, mobile, ONNX, …) are applied first. Inclusion criteria: CUDA/linalg labels, kernel terms in title, or `correctness (silent)` label. Issues are ranked by a scoring formula and the top candidates are kept.
+
+### 3 — Validate findings (`tools/03_validate.sh [issue_numbers…]`)
+
+Runs a hybrid validator on each raw finding in parallel:
+
+1. **Precheck** (`scripts/precheck_issue.py`) — fast pattern-match for hard blockers without any LLM call (closed issue, spam, duplicate, etc.).
+2. **Pre-fetch** — fetches full issue data, linked PRs via `gh search prs`, and cross-reference timeline via the GitHub API.
+3. **Haiku classification** (`scripts/validate_issue.py`) — sends maintainer comments to `claude-haiku` with a focused system prompt; classifies each into a `signal_type` (`approved_fix`, `wont_fix`, `fixed_elsewhere`, `blocked_action`, …).
+4. **Python scoring** — deterministic confidence formula (base 0.50, additive adjustments for repro script, triaged label, maintainer signals, PR status, issue age). Hard blockers (`already_fixed`, `maintainer_wont_fix`, `fixed_elsewhere`) force a skip regardless of score.
+5. **Output routing** — findings with confidence ≥ 0.75 are written to `findings/validated/`; everything else is skipped.
+
+After all validators finish, the script aggregates `findings/validated/*.json` into `public/data/findings.json`.
+
+### 4 — Browse results (web UI)
+
+`server.py` is a single-file dev server (Python stdlib only) that:
+
+- Serves static files from `public/`
+- Exposes `POST /api/run/<group_id>` which streams the full pipeline (stages 2 + 3) as Server-Sent Events (SSE)
+- Writes per-group result files (`public/data/findings_<group_id>.json`) so results from different groups persist independently
+
+The UI lets you:
+- Browse all topic groups in a sidebar with finding counts
+- Run the pipeline for any group and watch live progress
+- Switch between groups without losing previously loaded results
+- Expand any issue card for full detail: confidence breakdown, maintainer signals, linked PRs, recommended action
+
+---
+
+## Architecture
+
+```
+server.py                   Dev server + SSE pipeline endpoint
+├── tools/
+│   ├── 01_discover_topics.sh   Fetch + cluster open issues
+│   ├── 02_surface.sh           Score + filter to raw findings
+│   ├── 03_validate.sh          Parallel validation + aggregation
+│   └── run_pipeline.sh         CLI wrapper for all three stages
+├── scripts/
+│   ├── discover_topics.py      Label co-occurrence clustering
+│   ├── score_issues.py         Domain scoring rules
+│   ├── precheck_issue.py       Fast pre-filter (no LLM)
+│   └── validate_issue.py       Haiku classification + Python scorer
+├── public/
+│   ├── index.html              Single-file browser UI
+│   └── data/
+│       ├── topic_groups.json           Sidebar data
+│       ├── findings_index.json         Which groups have been run
+│       ├── findings_<group_id>.json    Per-group validated findings
+│       └── findings.json               Latest run (also kept for compat)
+├── findings/
+│   ├── raw/                    Surfaced candidates (cleared each run)
+│   ├── validated/              Validated findings (confidence ≥ 0.75)
+│   └── cache/                  Validation cache keyed by issue + labels
+└── data/
+    ├── topic_groups.json       Source of truth for group list
+    └── selected_topics.json    Active group selection
+```
+
+---
+
+## Validation cache
+
+Validated findings are cached in `findings/cache/` keyed by issue number. On subsequent runs, if a cached finding's issue labels haven't changed and the cache version matches, the validator is skipped and the cached result is used directly. This saves API calls and time when re-running the same group.
+
+Cache is invalidated when:
+- Any of the issue's labels change
+- `CACHE_VERSION` in `server.py` is bumped
+
+---
+
+## Confidence scoring
+
+| signal | adjustment |
 |---|---|
-| Issues analyzed | 1,120 |
-| Total findings | 55 |
-| **Actionable** (confidence ≥ 0.75) | **21** |
-| Needs human review (0.40–0.74) | 25 |
-| Rejected | 9 |
-| Abandoned PRs to revive | 12 |
+| `correctness (silent)` label | +0.25 |
+| maintainer `approved_fix` or `requested_merge` | +0.20 each |
+| repro script present | +0.15 |
+| `triaged` label | +0.10 |
+| fix scope is single file | +0.10 |
+| issue open ≥ 2 years | +0.05 |
+| already fixed (merged PR) | −0.45 |
+| `wont_fix` or `blocked_action` signal | −0.40 |
+| open PR exists (active work) | −0.40 per PR |
+| abandoned PR | −0.25 per PR |
+| `by_design` signal | −0.15 |
+| stale with no maintainer comment (≥ 3 years) | −0.05 |
 
-**By bug class:**
-- Silent correctness bugs (`module: correctness (silent)`) — 32
-- Performance regressions — 12
-- Missing fast paths — 9
-
-**Top findings:**
-
-| confidence | finding | action |
-|---|---|---|
-| 1.00 | [matmul returns uninitialized memory for int64 (zero inner dim)](findings/validated/pytorch_71774.json) | revive_abandoned_pr |
-| 0.95 | [linalg.slogdet does not propagate NaN in CUDA](findings/validated/pytorch_173638.json) | file_pr |
-| 0.95 | [baddbmm on CPU wrong results under certain conditions](findings/validated/pytorch_136299.json) | revive_abandoned_pr |
-| 0.90 | [linalg.lstsq triggers UBSan RuntimeError (albanD: "we'll accept a simple PR")](findings/validated/pytorch_88941.json) | file_pr |
-| 0.90 | [SDPA wrong results with sliding window attention](findings/validated/pytorch_162362.json) | file_pr |
-| 0.90 | [CUDA MultiheadAttention + bool mask + dropout → NaNs](findings/validated/pytorch_152028.json) | file_pr |
-
-All validated findings include a `contribution_path` field with step-by-step instructions for reviving the fix.
+Hard blockers (`already_fixed`, `maintainer_wont_fix`, `maintainer_blocked_action`, `fixed_elsewhere`) cause the finding to be skipped regardless of score. Threshold for inclusion: **0.75**.
 
 ---
 
-## Pipeline
+## Running from the CLI
 
-```
-GitHub issues corpus
-       │
-       ▼
- ┌─────────────┐
- │ surface     │  triage-only, no API calls
- │ agent       │  domain filter → raw findings JSON
- └─────────────┘
-       │  findings/raw/*.json
-       ▼
- ┌─────────────┐
- │ validator   │  live gh CLI investigation
- │ agent       │  confidence scoring, PR archaeology
- └─────────────┘
-       │
-       ├── findings/validated/     confidence ≥ 0.75
-       ├── findings/needs_review/  confidence 0.40–0.74
-       └── findings/rejected/      confidence < 0.40 or hard blocker
+```bash
+# Full pipeline for a group
+./tools/run_pipeline.sh cuda_and_distributed
+
+# Just surface (no validation)
+./tools/run_pipeline.sh cpu_performance --surface-only
+
+# Re-validate without re-surfacing
+./tools/run_pipeline.sh cpu_performance --validate-only
+
+# Validate specific issue numbers
+bash tools/03_validate.sh 113956 152028 173638
 ```
 
-### Surface agent ([`agents/surface.md`](agents/surface.md))
-
-Reads issue metadata (title, labels, body preview) and applies:
-
-1. **D1 hard exclusions** — distributions, RNN, dataloader, optimizer, ONNX, mobile, Android, iOS
-2. **D2 inclusion gate** — must carry CUDA/linalg labels, or have kernel terms in the title (`cuda`, `matmul`, `conv`, `gemm`, `sdpa`, …), or be a `correctness (silent)` bug in a linear algebra op
-3. **Priority tiers** — P1 (`correctness (silent)`), P2 (quantified regression), P3 (perf + repro), P4 (actionable label)
-
-Output: raw finding JSON with `stage: "raw"` and `confidence: null`.
-
-### Validator agent ([`agents/validator.md`](agents/validator.md))
-
-Takes a raw finding and runs live `gh` CLI queries:
-
-1. Fetch full issue body and comments
-2. Classify maintainer signals (`approved_fix`, `blocked_action`, `wont_fix`, `by_design`, …)
-3. Search for linked PRs; fetch merge status, reviews, abandoned reason
-4. Detect hard blockers (`maintainer_blocked_action`, `already_fixed`, `maintainer_wont_fix`)
-5. Score confidence (base 0.50, additive adjustments, clamped to [0.0, 1.0])
-6. Assign `recommended_action` (`file_pr`, `revive_abandoned_pr`, `contribute_to_active_pr`, `reject`)
-7. Generate `contribution_path` steps for `revive_abandoned_pr` findings
-
-**Hard blocker examples** (force reject regardless of score):
-- `maintainer_blocked_action` — "the problem is within MAGMA and we don't have control over it"
-- `already_fixed` — collaborator confirmed fixed on main
-- `maintainer_wont_fix` — explicit rejection
+Available group IDs are printed when you run `run_pipeline.sh` with no arguments (requires `data/topic_groups.json` to exist).
 
 ---
 
-## Schema
+## Prerequisites
 
-Every finding is a JSON object validated against [`schema/finding.schema.json`](schema/finding.schema.json) (JSON Schema draft-07). The schema enforces staged validation:
-
-- `stage: "raw"` → `confidence` must be `null`
-- `stage: "validated" | "needs_review" | "rejected"` → all Layer 2/3 fields required
-
-See [`schema/finding_example.json`](schema/finding_example.json) for a fully populated example (issue #71774, the ground truth positive case).
-
-### Key fields
-
-```jsonc
-{
-  "finding_id": "pytorch_71774",
-  "confidence": 0.92,                  // [0.0, 1.0] or null if raw
-  "recommended_action": "revive_abandoned_pr",
-  "stage": "validated",
-  "linked_prs": [...],                 // PR number, state, merged, abandoned_reason
-  "maintainer_signals": [...],         // author, role, signal_type, quote
-  "blocking_signals": [...],           // free-text list of what prevents action
-  "contribution_path": [               // only on revive_abandoned_pr findings
-    { "step": 1, "title": "...", "description": "...", "link": "...", "warning": "..." },
-    ...
-  ]
-}
-```
-
----
-
-## Data files
-
-| path | description |
+| tool | purpose |
 |---|---|
-| `public/data/findings.json` | All validated + needs_review findings merged, sorted by confidence |
-| `public/data/summary.json` | Aggregate stats for the current run |
-| `data/ground_truth.json` | 3 hand-verified anchor cases used to calibrate the classifier |
+| Python 3.10+ | server, scripts |
+| [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`claude`) | Haiku classification in validator |
+| [GitHub CLI](https://cli.github.com/) (`gh`) | Issue/PR fetching, authentication |
 
----
-
-## Running the pipeline
-
-The agents are system prompts for Claude — paste the contents of `agents/surface.md` or `agents/validator.md` as the system prompt, then provide the issue data as the user message.
-
-**Surface agent** — provide a batch of issue metadata objects (title, labels, body preview):
-```
-Input:  issue list JSON
-Output: findings/raw/*.json
+```bash
+gh auth login   # authenticate once
+python3 server.py
 ```
 
-**Validator agent** — provide a single raw finding JSON:
-```
-Input:  findings/raw/pytorch_NNNNN.json
-Output: findings/{validated,needs_review,rejected}/pytorch_NNNNN.json
-```
-
-The validators can be run in parallel batches (5–7 findings per agent) without coordination — each writes to its own output file.
-
----
-
-## Ground truth
-
-Three manually verified anchor cases in [`data/ground_truth.json`](data/ground_truth.json):
-
-| id | verdict | key signal |
-|---|---|---|
-| #71774 | **positive** | `correctness (silent)` + approved PR + uninitialized memory repro |
-| #76962 | **noise** | CI test-disable tracker, not a fixable bug |
-| #72408 | **ambiguous** | Real perf issue, but maintainer: "no real way to act on this" |
+No pip dependencies — everything uses the standard library or tools above.
