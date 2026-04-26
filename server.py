@@ -138,6 +138,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         repo = self._read_repo()
         try:
+            if group_id.startswith('search_'):
+                term = group_id[7:].replace('_', ' ')
+                self._inject_custom_group(group_id, term, repo)
             self._surface(group_id, repo)
             cached = self._restore_from_cache()
             self._validate(group_id, skip=cached)
@@ -148,6 +151,53 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         finally:
             with _lock:
                 _state['running'] = False
+
+    def _inject_custom_group(self, group_id: str, term: str, repo: str):
+        """Create a synthetic topic group from labels matching `term` in the corpus."""
+        corpus_path = REPO_ROOT / 'data' / f'corpus_{repo.replace("/", "_")}.json'
+        if not corpus_path.exists():
+            raise RuntimeError(f'Corpus not found at {corpus_path}. Run discovery first.')
+
+        with open(corpus_path) as f:
+            issues = json.load(f)
+
+        label_open: dict[str, int] = {}
+        for issue in issues:
+            if issue.get('state', '').upper() not in ('OPEN', ''):
+                continue
+            labels = [l if isinstance(l, str) else l.get('name', '') for l in issue.get('labels', [])]
+            for lbl in labels:
+                if term.lower() in lbl.lower():
+                    label_open[lbl] = label_open.get(lbl, 0) + 1
+
+        if not label_open:
+            raise RuntimeError(f'No open issues found with labels matching "{term}"')
+
+        matching_labels = sorted(label_open.keys())
+        total_open      = sum(label_open.values())
+
+        groups_path = REPO_ROOT / 'data' / 'topic_groups.json'
+        with open(groups_path) as f:
+            groups_data = json.load(f)
+
+        groups_data['groups'] = [g for g in groups_data['groups'] if g['group_id'] != group_id]
+        groups_data['groups'].append({
+            'group_id':          group_id,
+            'display_name':      term.title(),
+            'description':       f'Issues with labels matching "{term}".',
+            'actionability':     'high',
+            'labels':            matching_labels,
+            'label_count':       len(matching_labels),
+            'total_open_issues': total_open,
+        })
+
+        with open(groups_path, 'w') as f:
+            json.dump(groups_data, f, indent=2); f.write('\n')
+
+        self._emit('progress', {
+            'pct': 1, 'msg': f'Found {len(matching_labels)} matching label(s), {total_open} open issues',
+            'log': None, 'group_open_count': total_open,
+        })
 
     def _proc(self, cmd, on_line):
         proc = subprocess.Popen(cmd, shell=True,
@@ -271,7 +321,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 d = json.load(f)
             d.pop('_cache_version', None)
             findings.append(d)
-        findings.sort(key=lambda x: (x.get('confidence') or 0), reverse=True)
+        findings.sort(key=lambda x: x.get('issue_created_at') or '', reverse=True)
+        findings.sort(key=lambda x: x.get('confidence') or 0, reverse=True)
 
         try:
             with open(REPO_ROOT / 'data' / 'selected_topics.json') as f:

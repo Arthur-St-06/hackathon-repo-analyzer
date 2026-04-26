@@ -29,7 +29,8 @@ if ! gh auth status &>/dev/null; then
   exit 1
 fi
 
-RAW_COUNT=$(find "$RAW_DIR" -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
+mkdir -p "$RAW_DIR" "$VAL_DIR"
+RAW_COUNT=$(find "$RAW_DIR" -name "*.json" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 if [[ "$RAW_COUNT" -eq 0 ]]; then
   echo "ERROR: No raw findings in $RAW_DIR. Run 02_surface.sh first." >&2
   exit 1

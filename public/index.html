@@ -194,44 +194,29 @@
       background: white;
       border: 1px solid #d0d7de;
       border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 150ms;
-    }
-    .issue-card.expanded { border-color: #0969da; }
-
-    .card-header {
       padding: 14px 16px;
-      cursor: pointer;
       display: flex;
+      gap: 14px;
       align-items: flex-start;
-      gap: 10px;
-      transition: background 120ms;
     }
-    .card-header:hover { background: #f6f8fa; }
-    .issue-card.expanded .card-header { background: #f6f8fa; }
 
-    .toggle-icon {
-      color: #57606a;
-      font-size: 11px;
-      flex-shrink: 0;
-      margin-top: 4px;
-      transition: transform 220ms ease;
-      user-select: none;
-    }
-    .issue-card.expanded .toggle-icon { transform: rotate(90deg); }
+    .card-left  { flex: 1; min-width: 0; }
+    .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
 
-    .card-body { flex: 1; min-width: 0; }
-    .issue-num  { font-size: 11px; color: #57606a; font-family: ui-monospace, monospace; }
-    .issue-title { font-size: 14px; font-weight: 600; margin: 3px 0 8px; line-height: 1.4; }
+    .issue-num  { font-size: 11px; color: #57606a; font-family: ui-monospace, monospace; margin-bottom: 3px; }
+    .issue-title { font-size: 14px; font-weight: 600; margin-bottom: 9px; line-height: 1.4; }
     .issue-title a { color: #1f2328; }
     .issue-title a:hover { color: #0969da; text-decoration: none; }
 
-    .card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+    .card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 6px; }
+    .card-chips { display: flex; flex-wrap: wrap; gap: 5px; }
 
-    .conf-badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 12px; color: white; flex-shrink: 0; }
+    .conf-badge { font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 12px; color: white; }
     .conf-hi  { background: #1a7f37; }
     .conf-med { background: #9a6700; }
     .conf-lo  { background: #57606a; }
+
+    .issue-age { font-size: 11px; color: #8c959f; white-space: nowrap; }
 
     .class-pill { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 12px; border: 1px solid; flex-shrink: 0; }
     .cls-correctness_silent     { background: #fff0f0; border-color: #ffb8b8; color: #a10000; }
@@ -244,56 +229,11 @@
     .lbl-special { background: #e6ffec; border-color: #4ac26b40; color: #116329; }
     .lbl-default { background: #f6f8fa; border-color: #d0d7de; color: #57606a; }
 
-    .issue-age { font-size: 11px; color: #8c959f; margin-left: auto; flex-shrink: 0; padding-left: 4px; }
+    .meta-chip { font-size: 11px; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 2px 7px; color: #1f2328; }
+    .meta-chip em { color: #57606a; font-style: normal; margin-right: 2px; }
 
-    /* ── Expand animation ── */
-    .card-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 280ms ease; }
-    .issue-card.expanded .card-detail { grid-template-rows: 1fr; }
-    .card-detail > div { overflow: hidden; }
-
-    /* ── Detail inner ── */
-    .detail-inner { padding: 16px; border-top: 1px solid #eaeef2; display: flex; flex-direction: column; gap: 14px; }
-    .det-section h4 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #8c959f; margin-bottom: 7px; }
-
-    .justification { font-size: 13px; line-height: 1.6; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 10px 12px; white-space: pre-wrap; }
-    .action-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .action-badge { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px; border: 1px solid; }
-    .act-file_pr            { background: #e6ffec; border-color: #4ac26b60; color: #116329; }
-    .act-file_issue         { background: #ddf4ff; border-color: #54aeff60; color: #0550ae; }
-    .act-revive_abandoned_pr{ background: #fff8f0; border-color: #ffd9b360; color: #a05000; }
-    .act-needs_human_review { background: #f6f8fa; border-color: #d0d7de; color: #57606a; }
-    .act-reject             { background: #fff0f0; border-color: #ffb8b8; color: #a10000; }
-
-    .meta-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .meta-chip { font-size: 12px; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 3px 8px; color: #1f2328; }
-    .meta-chip em { color: #57606a; font-style: normal; font-size: 11px; margin-right: 3px; }
-
-    .surface-reasoning { font-size: 13px; color: #57606a; font-style: italic; line-height: 1.55; }
-
-    .signal-list, .pr-list, .blocker-list { display: flex; flex-direction: column; gap: 6px; }
-    .signal-item { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 9px 11px; }
-    .signal-head { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
-    .sig-author { font-size: 12px; font-weight: 600; }
-    .sig-role   { font-size: 10px; background: #eaeef2; color: #57606a; padding: 1px 5px; border-radius: 4px; }
-    .sig-type   { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: auto; }
-    .sigt-approved_fix,.sigt-requested_merge { background: #e6ffec; color: #116329; }
-    .sigt-wont_fix,.sigt-blocked_action      { background: #fff0f0; color: #a10000; }
-    .sigt-by_design                          { background: #fff8f0; color: #a05000; }
-    .sigt-needs_more_info                    { background: #f6f8fa; color: #57606a; border: 1px solid #d0d7de; }
-    .sigt-scoped_bug                         { background: #ddf4ff; color: #0550ae; }
-    .sigt-partial_fix                        { background: #fffbe6; color: #7d4e00; }
-    .sig-quote { font-size: 12px; color: #57606a; font-style: italic; border-left: 3px solid #d0d7de; padding-left: 8px; }
-
-    .pr-item { display: flex; align-items: flex-start; gap: 9px; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 9px 11px; }
-    .pr-state { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; margin-top: 1px; }
-    .prs-merged { background: #f0e6ff; color: #6e40c9; }
-    .prs-open   { background: #e6ffec; color: #116329; }
-    .prs-closed { background: #fff0f0; color: #a10000; }
-    .pr-title { font-size: 13px; font-weight: 500; }
-    .pr-meta  { font-size: 11px; color: #57606a; margin-top: 2px; }
-
-    .blocker-item { font-size: 12px; color: #a10000; background: #fff0f0; border: 1px solid #ffb8b8; border-radius: 6px; padding: 6px 10px; }
-    .none-text { font-size: 12px; color: #8c959f; font-style: italic; }
+    .blocker-pill { font-size: 11px; font-weight: 600; color: #a10000; background: #fff0f0; border: 1px solid #ffb8b8; border-radius: 6px; padding: 2px 7px; }
+    .signal-summary { font-size: 11px; color: #57606a; }
 
     /* ── Pipeline progress ── */
     @keyframes shimmer {
@@ -337,6 +277,43 @@
       border-color: #0969da;
       box-shadow: 0 0 0 3px rgba(9,105,218,0.12);
     }
+
+    /* ── Custom topic search ── */
+    .custom-topic-form {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .custom-topic-input {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 10px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #1f2328;
+      background: white;
+      transition: border-color 120ms, box-shadow 120ms;
+    }
+    .custom-topic-input:focus {
+      outline: none;
+      border-color: #0969da;
+      box-shadow: 0 0 0 3px rgba(9,105,218,0.12);
+    }
+    .custom-topic-btn {
+      padding: 6px 10px;
+      background: #0969da;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 120ms;
+    }
+    .custom-topic-btn:hover { background: #0757ba; }
 
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -509,7 +486,11 @@ async function loadResults(groupId) {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
     });
-    const findings = (data.findings || []).sort((a,b) => (b.confidence||0)-(a.confidence||0));
+    const findings = (data.findings || []).sort((a,b) => {
+      const cd = (b.confidence||0) - (a.confidence||0);
+      if (cd !== 0) return cd;
+      return (b.issue_created_at||'').localeCompare(a.issue_created_at||'');
+    });
     S.loadedFindings[groupId] = findings;
     S.findingsIndex[groupId]  = {
       count:        findings.length,
@@ -573,6 +554,10 @@ async function runPipeline(groupId) {
           if (d.pct != null) S.runPct = d.pct;
           if (d.msg)         S.runMsg = d.msg;
           if (d.log)         S.runLog.push(d.log);
+          if (d.group_open_count != null) {
+            const g = S.groups.find(g => g.group_id === groupId);
+            if (g) g.total_open_issues = d.group_open_count;
+          }
           render();
         } else if (evtName === 'done') {
           S.runPct = 100;
@@ -594,6 +579,27 @@ async function runPipeline(groupId) {
   }
 }
 
+function submitCustomTopic() {
+  const raw = (document.getElementById('custom-topic-input')?.value || '').trim();
+  if (!raw) return;
+  const slug    = raw.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const groupId = 'search_' + slug;
+  // Add or replace virtual group in sidebar
+  S.groups = S.groups.filter(g => g.group_id !== groupId);
+  S.groups.unshift({
+    group_id:          groupId,
+    display_name:      raw.replace(/\b\w/g, c => c.toUpperCase()),
+    description:       `Custom search: ${raw}`,
+    total_open_issues: 0,
+    _custom:           true,
+  });
+  S.selectedId  = groupId;
+  S.expandedNum = null;
+  S.runError    = '';
+  render();
+  runPipeline(groupId);
+}
+
 function selectGroup(id) {
   S.selectedId  = id;
   S.expandedNum = null;
@@ -601,10 +607,6 @@ function selectGroup(id) {
   render();
 }
 
-function toggleCard(num) {
-  S.expandedNum = S.expandedNum === num ? null : num;
-  render();
-}
 
 // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -643,12 +645,11 @@ function renderInitial() {
     <div class="step-card">
       <div class="step-num">1</div>
       <h2>Analyze a GitHub Repository</h2>
-      <p>Paste a GitHub URL or type <code>owner/repo</code> to fetch issues and discover topic groups.</p>
       <input id="repo-input" class="repo-input" type="text"
              placeholder="https://github.com/huggingface/transformers"
              onkeydown="if(event.key==='Enter')submitRepo()">
       <div class="step-actions">
-        <button class="btn btn-primary" onclick="submitRepo()">Analyze Repository →</button>
+        <button class="btn btn-primary" onclick="submitRepo()">Analyze Repository</button>
       </div>
       ${S.discoverError ? `<div class="step-error">⚠ ${esc(S.discoverError)}</div>` : ''}
     </div>
@@ -664,6 +665,12 @@ function renderSplit() {
   return `<div class="split">
     <aside>
       <h2>Topic Groups ${repoLabel}</h2>
+      <div class="custom-topic-form">
+        <input id="custom-topic-input" class="custom-topic-input" type="text"
+               placeholder="e.g. cuda"
+               onkeydown="if(event.key==='Enter')submitCustomTopic()">
+        <button class="custom-topic-btn" onclick="submitCustomTopic()">→</button>
+      </div>
       <div class="group-list">${renderSidebar()}</div>
     </aside>
     <div class="main">
@@ -782,97 +789,58 @@ function renderMain() {
     </div>`;
 }
 
-// ── Issue card ────────────────────────────────────────────────────────────────
+// ── Issue card (flat — no expand) ─────────────────────────────────────────────
 
 function renderCard(f) {
-  const expanded = f.issue_number === S.expandedNum;
-  const conf     = f.confidence ?? 0;
-  const cls      = f.initial_classification || 'unknown';
+  const conf = f.confidence ?? 0;
+  const cls  = f.initial_classification || 'unknown';
 
   const labels = (f.issue_labels || []).slice(0, 6)
     .map(l => `<span class="${labelClass(l)}">${esc(l)}</span>`).join('');
 
-  return `<div class="issue-card${expanded ? ' expanded' : ''}">
-  <div class="card-header" onclick="toggleCard(${f.issue_number})">
-    <span class="toggle-icon">▶</span>
-    <div class="card-body">
-      <div class="issue-num">#${f.issue_number}</div>
-      <div class="issue-title">
-        <a href="${esc(f.issue_url)}" target="_blank" rel="noopener"
-           onclick="event.stopPropagation()">${esc(f.issue_title)}</a>
-      </div>
-      <div class="card-meta">
-        <span class="conf-badge ${confClass(conf)}">${conf.toFixed(2)}</span>
-        ${cls !== 'unknown' ? `<span class="class-pill cls-${slugClass(cls)}">${esc(cls.replace(/_/g,' '))}</span>` : ''}
-        ${labels}
-        <span class="issue-age">opened ${timeAgo(f.issue_created_at)}</span>
-      </div>
-    </div>
-  </div>
-  <div class="card-detail"><div>${renderDetail(f)}</div></div>
-</div>`;
-}
-
-function renderDetail(f) {
-  const justHtml = f.confidence_justification
-    ? `<div class="justification">${renderCode(f.confidence_justification)}</div>`
-    : '<span class="none-text">Not recorded.</span>';
-
-  const action = f.recommended_action;
-  const actionHtml = action
-    ? `<span class="action-badge act-${slugClass(action)}">${esc(ACTION_LABELS[action]||action)}</span>`
-    : '';
-
-  const hw = (f.affected_hardware||[]).map(h => `<span class="meta-chip"><em>hw</em>${esc(h)}</span>`).join('');
-  const chipsHtml = [
-    f.fix_scope          ? `<span class="meta-chip"><em>scope</em>${esc(f.fix_scope.replace(/_/g,' '))}</span>` : '',
+  // hw / repro / scope chips
+  const hw = (f.affected_hardware || []).map(h => `<span class="meta-chip"><em>hw</em>${esc(h)}</span>`).join('');
+  const chips = [
+    f.fix_scope && f.fix_scope !== 'unknown' ? `<span class="meta-chip"><em>scope</em>${esc(f.fix_scope.replace(/_/g,' '))}</span>` : '',
     hw,
-    f.still_reproducible ? `<span class="meta-chip"><em>repro</em>${esc(f.still_reproducible)}</span>` : '',
-  ].join('');
+    f.still_reproducible && f.still_reproducible !== 'unknown' ? `<span class="meta-chip"><em>repro</em>${esc(f.still_reproducible)}</span>` : '',
+  ].filter(Boolean).join('');
 
-  const blockers = f.blocking_signals || [];
-  const blockersHtml = blockers.length
-    ? blockers.map(b => `<div class="blocker-item">⚠ ${esc(b)}</div>`).join('')
-    : '<span class="none-text">None</span>';
+  // Blocking signals — show as red pills
+  const blockers = (f.blocking_signals || [])
+    .map(b => `<span class="blocker-pill">⚠ ${esc(b.split(':')[0].replace(/_/g,' '))}</span>`)
+    .join('');
 
+  // Maintainer signal summary — type counts, no quotes
   const sigs = f.maintainer_signals || [];
-  const sigsHtml = sigs.length
-    ? sigs.map(s => `<div class="signal-item">
-        <div class="signal-head">
-          <span class="sig-author"><a href="https://github.com/${esc(s.author)}" target="_blank" rel="noopener">@${esc(s.author)}</a></span>
-          <span class="sig-role">${esc(s.role)}</span>
-          <span class="sig-type sigt-${slugClass(s.signal_type)}">${esc(s.signal_type.replace(/_/g,' '))}</span>
-        </div>
-        ${s.quote ? `<div class="sig-quote">${esc(s.quote)}</div>` : ''}
-      </div>`).join('')
-    : '<span class="none-text">None</span>';
+  let sigSummary = '';
+  if (sigs.length) {
+    const counts = {};
+    sigs.forEach(s => { counts[s.signal_type] = (counts[s.signal_type] || 0) + 1; });
+    sigSummary = Object.entries(counts)
+      .map(([t, n]) => (n > 1 ? `${t.replace(/_/g,' ')} ×${n}` : t.replace(/_/g,' ')))
+      .join(' · ');
+  }
 
-  const prs = f.linked_prs || [];
-  const prsHtml = prs.length
-    ? prs.map(pr => {
-        const sc    = pr.merged ? 'prs-merged' : pr.state==='open' ? 'prs-open' : 'prs-closed';
-        const label = pr.merged ? 'merged' : pr.state;
-        const when  = pr.merged && pr.merged_at ? ` · merged ${timeAgo(pr.merged_at)}` : '';
-        return `<div class="pr-item">
-          <span class="pr-state ${sc}">${esc(label)}</span>
-          <div>
-            <div class="pr-title"><a href="${esc(pr.url)}" target="_blank" rel="noopener">#${pr.number} ${esc(pr.title)}</a></div>
-            <div class="pr-meta">${esc(pr.reviews_summary||'')}${when}</div>
-          </div>
-        </div>`;
-      }).join('')
-    : '<span class="none-text">None</span>';
-
-  return `<div class="detail-inner">
-  <div class="det-section"><h4>Confidence scoring</h4>${justHtml}</div>
-  <div class="det-section">
-    <h4>Recommended action</h4>
-    <div class="action-row">${actionHtml}<div class="meta-chips">${chipsHtml}</div></div>
+  return `<div class="issue-card">
+  <div class="card-left">
+    <div class="issue-num">#${f.issue_number}</div>
+    <div class="issue-title">
+      <a href="${esc(f.issue_url)}" target="_blank" rel="noopener">${esc(f.issue_title)}</a>
+    </div>
+    <div class="card-meta">
+      ${labels}
+    </div>
+    ${chips || blockers || sigSummary ? `<div class="card-chips">
+      ${chips}
+      ${blockers}
+      ${sigSummary ? `<span class="signal-summary">↳ ${esc(sigSummary)}</span>` : ''}
+    </div>` : ''}
   </div>
-  ${f.surface_reasoning ? `<div class="det-section"><h4>Triage note</h4><div class="surface-reasoning">${esc(f.surface_reasoning)}</div></div>` : ''}
-  <div class="det-section"><h4>Blocking signals</h4><div class="blocker-list">${blockersHtml}</div></div>
-  <div class="det-section"><h4>Maintainer signals</h4><div class="signal-list">${sigsHtml}</div></div>
-  <div class="det-section"><h4>Linked PRs</h4><div class="pr-list">${prsHtml}</div></div>
+  <div class="card-right">
+    <span class="conf-badge ${confClass(conf)}">${conf.toFixed(2)}</span>
+    <span class="issue-age">${timeAgo(f.issue_created_at)}</span>
+  </div>
 </div>`;
 }
 

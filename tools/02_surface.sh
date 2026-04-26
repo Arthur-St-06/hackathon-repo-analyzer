@@ -105,13 +105,16 @@ fi
 
 # ── Clear existing raw findings ────────────────────────────────────────────────
 
-RAW_COUNT=$(find "$RAW_DIR" -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
+mkdir -p "$RAW_DIR"
+VAL_DIR="$REPO_ROOT/findings/validated"
+mkdir -p "$VAL_DIR"
+
+RAW_COUNT=$(find "$RAW_DIR" -name "*.json" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 if [[ "$RAW_COUNT" -gt 0 ]]; then
   rm -f "$RAW_DIR"/*.json
 fi
 
-VAL_DIR="$REPO_ROOT/findings/validated"
-VAL_COUNT=$(find "$VAL_DIR" -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
+VAL_COUNT=$(find "$VAL_DIR" -name "*.json" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 if [[ "$VAL_COUNT" -gt 0 ]]; then
   rm -f "$VAL_DIR"/*.json
   echo "Cleared $VAL_COUNT validated finding(s) from previous run."

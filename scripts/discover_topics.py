@@ -143,7 +143,7 @@ def compute_topics(issues: list[dict]) -> list[dict]:
 # ── Stage 2: Jaccard co-occurrence clustering ─────────────────────────────────
 
 def cluster_labels(issues: list[dict], topics: list[dict],
-                   min_open: int = 10, target: int = 20) -> list[list[str]]:
+                   min_open: int = 10, target: int = 40) -> list[list[str]]:
     # Only cluster domain labels with enough open issues
     eligible = {
         t["label"] for t in topics
@@ -152,6 +152,13 @@ def cluster_labels(issues: list[dict], topics: list[dict],
 
     if not eligible:
         return []
+
+    open_by_label = {t["label"]: t["open_count"] for t in topics}
+    total_open    = sum(open_by_label.get(l, 0) for l in eligible)
+    # Soft cap: a cluster shouldn't hold more than 2x its fair share of open issues.
+    # This discourages snowballing of already-large clusters while still allowing
+    # merges when Jaccard similarity is high.
+    size_cap = max(total_open / target * 2, 1)
 
     co:   dict[tuple, int] = defaultdict(int)
     solo: dict[str, int]   = defaultdict(int)
@@ -168,7 +175,10 @@ def cluster_labels(issues: list[dict], topics: list[dict],
         union = solo[a] + solo[b] - inter
         return inter / union if union > 0 else 0.0
 
-    clusters: list[set[str]] = [{lbl} for lbl in eligible]
+    def cluster_open(c: set) -> int:
+        return sum(open_by_label.get(l, 0) for l in c)
+
+    clusters: list[set[str]] = [{lbl} for lbl in sorted(eligible)]
 
     while len(clusters) > target:
         best, bi, bj = -1.0, 0, 1
@@ -176,8 +186,17 @@ def cluster_labels(issues: list[dict], topics: list[dict],
             for j in range(i + 1, len(clusters)):
                 sims = [jaccard(a, b) for a in clusters[i] for b in clusters[j]]
                 avg  = sum(sims) / len(sims) if sims else 0.0
-                if avg > best:
-                    best, bi, bj = avg, i, j
+                if avg <= 0:
+                    continue
+                combined = cluster_open(clusters[i]) + cluster_open(clusters[j])
+                penalty  = min(1.0, size_cap / combined) if combined > 0 else 1.0
+                score    = avg * penalty
+                # Break ties deterministically by label name so results are stable across runs
+                ci_key = min(clusters[i])
+                cj_key = min(clusters[j])
+                if score > best or (score == best and (ci_key, cj_key) < (min(clusters[bi]), min(clusters[bj]))):
+                    best, bi, bj = score, i, j
+
         if best < 0.02:
             break
         merged = clusters[bi] | clusters[bj]
