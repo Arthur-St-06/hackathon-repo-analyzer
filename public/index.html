@@ -201,7 +201,40 @@
     }
 
     .card-left  { flex: 1; min-width: 0; }
-    .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; position: relative; }
+
+    .conf-tooltip-wrap { position: relative; }
+    .conf-tooltip {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      width: 260px;
+      background: #1f2328;
+      color: #e6edf3;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 10px 12px;
+      border-radius: 8px;
+      z-index: 100;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+    .conf-tooltip::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      right: 14px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 5px solid #1f2328;
+    }
+    .conf-tooltip-wrap:hover .conf-tooltip { display: block; }
+    .conf-row { display: flex; justify-content: space-between; gap: 12px; }
+    .conf-row + .conf-row { border-top: 1px solid #30363d; margin-top: 4px; padding-top: 4px; }
+    .conf-delta { font-weight: 700; flex-shrink: 0; }
+    .conf-delta.pos { color: #3fb950; }
+    .conf-delta.neg { color: #f85149; }
+    .conf-delta.neu { color: #8b949e; }
 
     .issue-num  { font-size: 11px; color: #57606a; font-family: ui-monospace, monospace; margin-bottom: 3px; }
     .issue-title { font-size: 14px; font-weight: 600; margin-bottom: 9px; line-height: 1.4; }
@@ -342,6 +375,22 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function slugClass(s) { return String(s||'').replace(/[^a-z0-9_]/gi,'_'); }
+function formatJustification(text) {
+  if (!text) return '';
+  return text.split('. ').map(step => {
+    const m = step.match(/^(.+?)\s*→\s*([+-]\d+\.\d+)/);
+    if (m) {
+      const label = m[1].replace(/, total \S+$/, '').trim();
+      const delta = m[2];
+      const cls   = delta.startsWith('+') ? 'pos' : 'neg';
+      return `<div class="conf-row"><span>${esc(label)}</span><span class="conf-delta ${cls}">${delta}</span></div>`;
+    }
+    // Base / Final lines
+    const f = step.match(/^(Base|Final):\s*(\S+)/);
+    if (f) return `<div class="conf-row"><span>${f[1]}</span><span class="conf-delta neu">${f[2]}</span></div>`;
+    return '';
+  }).filter(Boolean).join('');
+}
 function timeAgo(iso) {
   if (!iso) return '';
   const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
@@ -838,7 +887,10 @@ function renderCard(f) {
     </div>` : ''}
   </div>
   <div class="card-right">
-    <span class="conf-badge ${confClass(conf)}">${conf.toFixed(2)}</span>
+    <div class="conf-tooltip-wrap">
+      <span class="conf-badge ${confClass(conf)}">${conf.toFixed(2)}</span>
+      ${f.confidence_justification ? `<div class="conf-tooltip">${formatJustification(f.confidence_justification)}</div>` : ''}
+    </div>
     <span class="issue-age">${timeAgo(f.issue_created_at)}</span>
   </div>
 </div>`;
