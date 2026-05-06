@@ -1,6 +1,8 @@
-# Issue Researcher
+# IssueSignal
+Rank GitHub issues by relevance, quality, and contributor fit. 
 
-A multi-agent pipeline that automatically identifies, triages, and validates contributor-fixable bugs in any GitHub repository. It clusters open issues into topic groups, surfaces the highest-signal candidates, and validates each one with live GitHub data and an LLM — then presents the results in a browser UI.
+# What does it do?
+It is a multi-agent pipeline that automatically identifies, triages, and validates contributor-fixable bugs in any GitHub repository. It clusters open issues into topic groups, surfaces the highest-signal candidates, and validates each one with live GitHub data and an LLM — then presents the results in a browser UI.
 
 ---
 
